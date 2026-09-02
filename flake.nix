@@ -11,15 +11,19 @@
 
     uv2nix = {
       url = "github:pyproject-nix/uv2nix";
-      inputs.pyproject-nix.follows = "pyproject-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs = {
+        pyproject-nix.follows = "pyproject-nix";
+        nixpkgs.follows = "nixpkgs";
+      };
     };
 
     pyproject-build-systems = {
       url = "github:pyproject-nix/build-system-pkgs";
-      inputs.pyproject-nix.follows = "pyproject-nix";
-      inputs.uv2nix.follows = "uv2nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs = {
+        pyproject-nix.follows = "pyproject-nix";
+        uv2nix.follows = "uv2nix";
+        nixpkgs.follows = "nixpkgs";
+      };
     };
   };
 
@@ -60,6 +64,12 @@
           UV_NO_SYNC = "1";
           UV_PYTHON = "${venv}/bin/python";
           UV_PYTHON_DOWNLOADS = "never";
+
+          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+            # Numpy
+            pkgs.stdenv.cc.cc.lib
+            pkgs.zlib
+          ];
         };
       };
     };
