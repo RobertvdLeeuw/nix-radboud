@@ -48,6 +48,26 @@
         pkgs.lib.composeManyExtensions [
           pyproject-build-systems.overlays.default
           overlay
+
+          # .so files that need to be maually linked
+          (final: prev: {
+            torchaudio = prev.torchaudio.overrideAttrs (old: {
+              buildInputs = (old.buildInputs or [ ]) ++ [
+                pkgs.ffmpeg_6
+                pkgs.sox
+              ];
+
+              preFixup = (old.preFixup or "") + ''
+                addAutoPatchelfSearchPath "${final.torch}/${python.sitePackages}/torch"
+
+                # only ffmpeg_6 is provided above; drop the other bundled
+                # ffmpeg-version shims so autoPatchelf doesn't try to resolve them
+                rm -f $out/${python.sitePackages}/torio/lib/*torio_ffmpeg4*.so
+                rm -f $out/${python.sitePackages}/torio/lib/*torio_ffmpeg5*.so
+                rm -f $out/${python.sitePackages}/torio/lib/*torio_ffmpeg7*.so
+              '';
+            });
+          })
         ]
       );
 
