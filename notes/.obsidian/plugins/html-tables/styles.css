@@ -1,0 +1,394 @@
+/* Better Tables Plugin Styles */
+
+.table-caption {
+	font-weight: bold;
+	margin-bottom: 0.5em;
+	text-align: center;
+	font-size: 1.1em;
+	color: var(--text-normal);
+}
+
+.better-table {
+	border-collapse: collapse;
+	width: max-content;
+	max-width: 100%;
+	margin: 1em 0;
+	position: relative;
+}
+
+.better-table caption {
+	font-weight: bold;
+	margin-bottom: 0.5em;
+	text-align: center;
+	caption-side: top;
+}
+
+.better-table th,
+.better-table td {
+	border: 1px solid var(--background-modifier-border);
+	padding: 0.5em;
+	text-align: left;
+	vertical-align: middle;
+	position: relative;
+	cursor: pointer;
+}
+
+.better-table.better-table-edge-column-hover {
+	cursor: col-resize;
+}
+
+.better-table.better-table-edge-column-hover th,
+.better-table.better-table-edge-column-hover td {
+	cursor: col-resize;
+}
+
+.better-table.better-table-edge-row-hover {
+	cursor: row-resize;
+}
+
+.better-table.better-table-edge-row-hover th,
+.better-table.better-table-edge-row-hover td {
+	cursor: row-resize;
+}
+
+.better-table.better-table-edge-column-hover::before,
+.better-table.better-table-edge-row-hover::before {
+	content: "";
+	position: absolute;
+	z-index: 10;
+	pointer-events: none;
+	background-color: var(--interactive-accent);
+	opacity: 0.9;
+}
+
+.better-table.better-table-edge-column-hover::before {
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+}
+
+.better-table.better-table-edge-row-hover::before {
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 3px;
+}
+
+.better-table th {
+	background-color: var(--background-secondary);
+	font-weight: bold;
+}
+
+.better-table tr:hover {
+	background-color: var(--background-secondary-hover);
+}
+
+/* Cell selection */
+.better-table td.cell-selected,
+.better-table th.cell-selected {
+	background-color: var(--background-modifier-hover);
+	box-shadow: inset 0 0 0 2px var(--interactive-accent);
+}
+
+.better-table td.better-table-cell-editing,
+.better-table th.better-table-cell-editing {
+	cursor: text;
+	outline: none;
+	background-color: var(--background-primary);
+}
+
+.better-table .better-table-markdown-cell p {
+	margin: 0;
+}
+
+.better-table .better-table-markdown-cell pre {
+	margin: 0;
+	white-space: pre-wrap;
+	font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+}
+
+.better-table .better-table-markdown-cell code {
+	white-space: pre-wrap;
+	font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+}
+
+.better-table caption.better-table-caption-ready {
+	cursor: text;
+}
+
+.better-table caption.better-table-caption-editing {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
+/* Alignment classes */
+.align-left {
+	text-align: left;
+}
+
+.align-center {
+	text-align: center;
+}
+
+.align-right {
+	text-align: right;
+}
+
+.align-top {
+	vertical-align: top;
+}
+
+.align-middle {
+	vertical-align: middle;
+}
+
+.align-bottom {
+	vertical-align: bottom;
+}
+
+/* Column resize handle */
+.column-resize-handle {
+	position: absolute;
+	right: -2px;
+	top: 0;
+	bottom: 0;
+	width: 4px;
+	background-color: var(--interactive-accent);
+	cursor: col-resize;
+	opacity: 0;
+	transition: opacity 0.2s;
+}
+
+.better-table th:hover .column-resize-handle {
+	opacity: 1;
+}
+
+/* Resizing state */
+.better-table.resizing {
+	cursor: col-resize;
+	user-select: none;
+}
+
+.better-table.resizing * {
+	cursor: col-resize;
+}
+
+/* Context menu */
+.table-context-menu {
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	z-index: 1000;
+	min-width: 180px;
+	padding: 4px 0;
+}
+
+.table-context-menu-position {
+	position: fixed;
+	left: var(--menu-x);
+	top: var(--menu-y);
+}
+
+.table-context-menu-item {
+	position: relative;
+	padding: 8px 12px;
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.table-context-menu-item:hover {
+	background-color: var(--background-secondary);
+}
+
+.table-context-menu-item.disabled {
+	color: var(--text-muted);
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.table-context-menu-item.disabled:hover {
+	background-color: transparent;
+}
+
+.table-context-menu-item.has-submenu {
+	padding-right: 28px;
+}
+
+.table-context-menu-item.has-submenu::after {
+	content: "›";
+	position: absolute;
+	right: 10px;
+	color: var(--text-muted);
+}
+
+.table-context-submenu {
+	display: none;
+	position: absolute;
+	left: 100%;
+	top: -5px;
+	min-width: 180px;
+	padding: 4px 0;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.table-context-menu-item.has-submenu:hover > .table-context-submenu {
+	display: block;
+}
+
+.table-context-menu-separator {
+	height: 1px;
+	background-color: var(--background-modifier-border);
+	margin: 4px 0;
+}
+
+/* Formula cells */
+.formula-cell {
+	font-family: monospace;
+	background-color: var(--background-secondary);
+}
+
+.formula-result {
+	color: var(--text-success);
+	font-weight: bold;
+}
+
+.formula-error {
+	color: var(--text-error);
+	font-style: italic;
+}
+
+/* Multiline cells */
+.better-table td br {
+	margin: 0.2em 0;
+}
+
+/* Header column */
+.better-table th:first-child,
+.better-table td:first-child {
+	font-weight: bold;
+	background-color: var(--background-secondary);
+}
+
+/* Merged cells */
+.merged-cell-hidden {
+	display: none;
+}
+
+/* Table editing */
+.better-table td:focus,
+.better-table th:focus {
+	outline: none;
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+	.better-table {
+		display: block;
+		overflow-x: auto;
+	}
+}
+
+/* Print styles */
+@media print {
+	.better-table {
+		page-break-inside: avoid;
+	}
+	
+	.column-resize-handle {
+		display: none;
+	}
+}
+
+/* Caption modal */
+.caption-input {
+	width: 100%;
+	margin-bottom: 1em;
+}
+
+.caption-button-container {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5em;
+}
+
+.better-table-convert-container {
+	position: relative;
+	box-sizing: border-box;
+	overflow: visible;
+}
+
+.cm-html-embed.better-table-convert-container {
+	padding: 0 !important;
+	margin-block: 0.25em !important;
+}
+
+.cm-html-embed.better-table-convert-container .better-table {
+	margin: 0;
+}
+
+.better-table-convert-button {
+	position: fixed;
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-muted);
+	padding: 0;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.12s ease-in-out;
+}
+
+.better-table-convert-button .svg-icon {
+	width: 16px;
+	height: 16px;
+}
+
+.better-table-convert-button.mod-active {
+	opacity: 0.72;
+	pointer-events: auto;
+}
+
+.better-table-convert-button.mod-active:hover,
+.better-table-convert-button:focus {
+	opacity: 1;
+}
+
+.better-table-convert-button.mod-hidden {
+	display: none;
+}
+
+.table-width-resize-handle {
+	position: absolute;
+	width: 6px;
+	min-height: 24px;
+	z-index: 18;
+	cursor: ew-resize;
+	opacity: 0;
+	transition: opacity 0.12s ease-in-out;
+}
+
+.table-width-resize-handle::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 2px;
+	width: 2px;
+	background-color: var(--interactive-accent);
+}
+
+.better-table-convert-container:hover > .table-width-resize-handle,
+.table-width-resize-handle:hover {
+	opacity: 1;
+}
