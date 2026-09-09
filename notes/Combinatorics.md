@@ -11,3 +11,11 @@ Hell comes from different selections on different pools, with some part ordered 
 - **Lower bound per bin, unordered:** Stars-bars with minimum in certain bins $\rightarrow n' = n - n_\text{reserved}, {{n'+k-1} \choose {n'}}$ combinations
 - **FLESH OUT FURTHER**
  
+
+## Other, Unsorted PT Stuff
+$U$ = outcome set $S$, events $E \subset S$ (or $E \subseteq S$?)
+Assumptions: $S$ is finite ($|S| = n$), all outcomes equiprobable
+
+
+
+

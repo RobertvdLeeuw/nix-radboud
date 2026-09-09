@@ -1,6 +1,6 @@
 
 ## Linear classification (BCI)
-4 types of distributions: circular/same, Gaussian/same, Gaussian/different, non-Gaussian
+4 types of distributions: circular/same, Gaussian/same, Gaussian/different, non-Gaussian. Only /same handled here
 
 Classification function $f(x)=w^T+b$, decision boundary $H = ax+b \rightarrow w \perp H$, $dist(\vec{0}, H) = \frac{-b}{||w||}$
 Classifier $\begin{cases} \text{the one} & f(x) > 0 \\ \text{the other} & f(x) < 0 \end{cases}$
@@ -18,6 +18,4 @@ Between-class covariance matrix: $s_B = (m_2-m_1)(m_2-m_1)^T$
 ### Fisher criterion (finding $w$ and $b$)
 $$J(w)=\frac{(m_2-m_1)^2}{s_1^2+s_2^2} \text{ (projected space)} = \frac{w^Ts_Bw}{w^Ts_Ww} \text{ (original space)}$$
 For best projection, maximize distance, minimize within-class variance: $argmax_w \text{ } J(w)$
-To argmax, differentiate by $w$, assume Linear Discriminant Analysis , $w = S_W^{-1}(m_2-m_1)$, $b = - \frac{w^T(m_1+m_2)}{2}$
-**TODO: try to proof this myself**
-a
+To argmax, differentiate by $w$, assume Linear Discriminant Analysis, solve for $\frac{dJ(w)}{dw}=0$ and $\frac{dJ(w)}{db}=0$, $w = S_W^{-1}(m_2-m_1)$, $b = - \frac{w^T(m_1+m_2)}{2}$
