@@ -6,7 +6,7 @@
 
 Disjoint sets (no overlap): $A \cap B = \emptyset$
 
-Power set = set of all subsets = $\mathcal{P}(S)$,  $|\mathcal{P}| = 2^n$
+Power set = set of all subsets (including the original set) = $\mathcal{P}(S)$,  $|\mathcal{P}| = 2^n$
 **TODO: Explore link between power set and combinations/permutations ([Powers of 2 in Pascal's Triangle](https://artofproblemsolving.com/videos/counting/chapter12/141))**
 ## Probability stuff
 $$P: \mathcal{P}(S) \to [0, 1]$$

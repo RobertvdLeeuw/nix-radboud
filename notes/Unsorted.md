@@ -19,3 +19,9 @@ Between-class covariance matrix: $s_B = (m_2-m_1)(m_2-m_1)^T$
 $$J(w)=\frac{(m_2-m_1)^2}{s_1^2+s_2^2} \text{ (projected space)} = \frac{w^Ts_Bw}{w^Ts_Ww} \text{ (original space)}$$
 For best projection, maximize distance, minimize within-class variance: $argmax_w \text{ } J(w)$
 To argmax, differentiate by $w$, assume Linear Discriminant Analysis, solve for $\frac{dJ(w)}{dw}=0$ and $\frac{dJ(w)}{db}=0$, $w = S_W^{-1}(m_2-m_1)$, $b = - \frac{w^T(m_1+m_2)}{2}$
+
+**TODO: Ordinary Least Squared, gradient of J**
+
+### KBAI
+![[Pasted image 20260909162953.png]]
+Flow networks (week 2, slides 72-84), to maximize flow: Ford-Fulkerson method (find edge with min unused capacity (bottleneck), try to draw line from sink s to source t (augmenting path, how is unspecified), add the delta capacity to the bottleneck edge, add -delta capacity to the other edges in the line but with reverse direction (residual edges)), max-flow min-cut theorem proves it.
