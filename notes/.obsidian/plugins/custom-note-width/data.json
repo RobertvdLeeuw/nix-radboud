@@ -1,0 +1,50 @@
+{
+  "language": "auto",
+  "defaultWidth": 90,
+  "defaultWidthUnit": "%",
+  "sliderWidth": 85,
+  "yamlKey": "custom-width",
+  "enableSlider": false,
+  "statusBarValueDisplay": "editable",
+  "enableStatusBarUnitSelector": true,
+  "enablePerNoteWidth": false,
+  "perNoteMode": "frontmatter",
+  "localOverrides": {},
+  "unitRanges": {
+    "%": {
+      "min": 0,
+      "max": 100
+    },
+    "px": {
+      "min": 100,
+      "max": 4000
+    },
+    "ch": {
+      "min": 10,
+      "max": 200
+    }
+  },
+  "enableCodeBlockWidth": false,
+  "codeBlockWidth": 800,
+  "codeBlockWidthUnit": "px",
+  "codeBlockWidthModes": {
+    "reading": true,
+    "source": true,
+    "livePreview": true
+  },
+  "controlMode": "slider",
+  "pillsPresets": [
+    {
+      "value": 30,
+      "unit": "%"
+    },
+    {
+      "value": 50,
+      "unit": "%"
+    },
+    {
+      "value": 100,
+      "unit": "%"
+    }
+  ]
+}

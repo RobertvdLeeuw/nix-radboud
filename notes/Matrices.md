@@ -119,6 +119,7 @@ A_{ij}=0 & i \neq j \\
 A_{ij} = \lambda_i & i = j
 \end{cases} \rightarrow \text{simple scaling transformation, every vector is eigen}
 $$
+**For later: PCA is just eigenvectors on covariance matrix of data.**
 ### Eigendecomposition
 $$A=DQD^{-1} \text{, where } A = \text{eigenvalues, D = diagonal matrix of A, Q = a matrix where each col is an eigenvector}$$
 Changing base vector to eigenvectors means every coordinate will be a diagonal matrix (which is much easier to work with) - called eigenbasis

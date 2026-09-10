@@ -9,7 +9,7 @@ Hell comes from different selections on different pools, with some part ordered 
 - **Constraint is 'at least/at most/none' about 1 pool:** complement
 - **1 pool, ordered selection with duplicates in pool:** $n$ objects with $n_1$ identical, $n_2$ identical, ... $\rightarrow \frac{n!}{n_1!n_2! \dots}$ permutations (unique jugglings of the letters in STATISTICS - S thrice, T thrice, I twice, rest once $\rightarrow \times 1! =  \times 1 \rightarrow$ ignored) 
 - **Lower bound per bin, unordered:** Stars-bars with minimum in certain bins $\rightarrow n' = n - n_\text{reserved}, {{n'+k-1} \choose {n'}}$ combinations
-- **FLESH OUT FURTHER**
+- **FLESH OUT FURTHER (WORK IN: THOSE BASE CASES ARE THEMSELVES ALSO DECOMP RULES!!)**
  
 
 ## Other, Unsorted PT Stuff

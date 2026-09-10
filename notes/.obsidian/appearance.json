@@ -1,3 +1,7 @@
 {
-  "theme": "obsidian"
+  "theme": "obsidian",
+  "showRibbon": true,
+  "showViewHeader": false,
+  "baseFontSize": 17,
+  "baseFontSizeAction": true
 }
