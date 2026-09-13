@@ -16,6 +16,7 @@ Common derivatives
 | ---------- | ---------------------- |
 | $e^{u}$    | $u'e^{u}$              |
 | $ln(u)$    | $\frac{u'}{u}$         |
+| $a^u$      | $a^ul n(u) u'$         |
 | $\sqrt{u}$ | $\frac{u'}{2\sqrt{u}}$ |
 | $sin(u)$   | $cos(u)u'$             |
 | $cos(u)$   | $-sin(u)u'$            |
