@@ -6,7 +6,7 @@ Positive means positive correlation, negative means negative correlation. Doesn'
 $Corr(x, y) = \frac{Cov(x, y)}{\sqrt{Var(x)}\sqrt{Var(y)}}$
 Normalized $[-1, 1]$ values which signal correlation strength as well.
 
-Covariance Matrix: $\begin{bmatrix} Var(x) & Cov(x, y) \\ Cov(y, x) & Var(y) \end{bmatrix} = (X - \overline{X})^T(X - \overline{X})$
+Covariance Matrix: $\begin{bmatrix} Var(x) & Cov(x, y) \\ Cov(y, x) & Var(y) \end{bmatrix} = \frac{(X - \overline{X})^T(X - \overline{X})}{n-1}$
 
 ## Open Questions
 - When/why n vs n-1?

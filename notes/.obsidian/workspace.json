@@ -92,7 +92,7 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -154,7 +154,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "b3928699ae7beac0",
@@ -259,16 +260,16 @@
       "bases:Create new base": false
     }
   },
-  "active": "03fca00731b64dcc",
+  "active": "b6e9ecec371a7b47",
   "lastOpenFiles": [
+    "Projections.md",
     "Matrices.md",
+    "Variance, Covariance & Correlation.md",
     "Combinatorics.md",
     "Derivatives.md",
-    "Projections.md",
     "Unsorted.md",
     "Set Theory.md",
     "Pasted image 20260909162953.png",
-    "Variance, Covariance & Correlation.md",
     "To Do.md",
     "homework/BCI/Week 2.md",
     "Pasted image 20260909163522.png",
