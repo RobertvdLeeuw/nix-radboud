@@ -1,7 +1,7 @@
 
 TODO: Inner (dot) vs outer vs mat mult vs hamarand vs etc
 ## Products
-Dot/inner: $\vec{u} \cdot \vec{v} = \vec{u}^T \vec{v} = \vec{v} \cdot \vec{u} \in \mathbb{R}$
+Dot/inner: $\vec{u} \cdot \vec{v} = \vec{u}^T \vec{v} = \vec{v} \cdot \vec{u} \in \mathbb{R}$ (projection length)
 Outer: $\vec{u} \otimes \vec{v} = \vec{u}\vec{v}^T = (\vec{v^T} \otimes \vec{u^T})^T \in \mathbb{R}^{|u| \times |v|}$
 
 ## Linear transformations
