@@ -13,7 +13,6 @@ Covariance matrix of class $C_k = s_k = \frac{\sum_{n \in C_k} (x_n-m_k)(x_n-m_k
 
 Total within-class covariance matrix: $S_W = \frac{1}{2}(s_1 + s_2)$ for balanced classes, otherwise $S_W = \frac{\sum N_k s_k}{N}$
 Between-class covariance matrix: $S_B = (m_2-m_1)(m_2-m_1)^T$
-**What do these mean intuitively?**
 
 ### Fisher criterion (finding $w$ and $b$)
 $$J(w)=\frac{(m_2-m_1)^2}{s_1^2+s_2^2} \text{ (projected space)} = \frac{w^Ts_Bw}{w^Ts_Ww} \text{ (original space)}$$

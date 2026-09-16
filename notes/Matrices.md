@@ -124,3 +124,6 @@ $$
 $$A=DQD^{-1} \text{, where } A = \text{eigenvalues, D = diagonal matrix of A, Q = a matrix where each col is an eigenvector}$$
 Changing base vector to eigenvectors means every coordinate will be a diagonal matrix (which is much easier to work with) - called eigenbasis
 ## M squared, M inv, etc`
+
+## Open Questions
+- Why is the determinant the product of all eigenvalues?

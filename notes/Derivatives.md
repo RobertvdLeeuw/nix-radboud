@@ -28,11 +28,10 @@ Common derivatives
 ## Function Approximation
 $$\text{Maclauren series: } f(x) @ 0 \approx f(0) + \frac{f'(0)}{1!}x + \frac{f''(0)}{2!}x^2 + ... = \sum_i^n \frac{\frac{d^1}{dx^i}f(0)x^i}{i!}$$
 $$\text{Taylor series: } f(x) @ a \approx f(a) + \frac{f'(a)}{1!}(x-a) + \frac{f''(a)}{2!}(x-a)^2 + ... = \sum_i^\infty \frac{\frac{d^1}{dx^i}f(a)(x-a)^i}{i!}$$
-2
+
 
 ## Multivariable
 Multivariable f(...) = >1 input, 1 output, multivariate $\vec{g}(\dots)$ = >1 input, >1 output 
 
 $$\text{Gradient of } J = \nabla J = \text{ vector of all first-order partial derivatives}$$
-$$\text{Hessian of } J = \nabla^2 J = \text{ matrix of all second-order partial derivatives}$$
-$$\text{Taylor Series: } f(\vec{x}) \approx P(\vec{x}) = f(\vec{a}) + \nabla f(\vec{a})^T(\vec{x} - \vec{a}) + \frac{(\vec{x} - \vec{a})^T \nabla^2 f(\vec{a})(\vec{x} - \vec{a})}{2!}+ \dots = \sum_i^\infty \frac{\nabla^i f(\vec{a})(\vec{x}-\vec{a})^i}{i!}$$
+$$\text{Hessian of } J = \nabla^2 J = \text{ matrix of all second-order partial derivatives}$$$$\text{Taylor Series: } f(\vec{x}) \approx P(\vec{x}) = f(\vec{a}) + \nabla f(\vec{a})^T(\vec{x} - \vec{a}) + \frac{(\vec{x} - \vec{a})^T \nabla^2 f(\vec{a})(\vec{x} - \vec{a})}{2!}+ \dots = \sum_i^\infty \frac{\nabla^i f(\vec{a})(\vec{x}-\vec{a})^i}{i!}$$
