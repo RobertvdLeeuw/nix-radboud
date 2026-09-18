@@ -126,4 +126,7 @@ Changing base vector to eigenvectors means every coordinate will be a diagonal m
 ## M squared, M inv, etc`
 
 ## Open Questions
-- Why is the determinant the product of all eigenvalues?
+- Why is the determinant the product of all eigenvalues? Because it's the sum of scale n each independent axis = amount that area is scaled on transformation 
+	- Convert to eigenbasis -> lintrans mat is diagonal
+	- Diagonal -> symmatric -> orthogonal eigenvectors
+	- Orthogonal eigenvectors means scale of area = scale of x * scale of y * ...

@@ -13,6 +13,20 @@
             "state": {
               "type": "markdown",
               "state": {
+                "file": "Projections.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Projections"
+            }
+          },
+          {
+            "id": "1fee98c3deab91d1",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
                 "file": "Unsorted.md",
                 "mode": "source",
                 "source": false
@@ -27,12 +41,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Projections.md",
+                "file": "Variance, Covariance & Correlation.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Projections"
+              "title": "Variance, Covariance & Correlation"
             }
           },
           {
@@ -217,16 +231,17 @@
       "bases:Create new base": false
     }
   },
-  "active": "fbb85eea5be7db28",
+  "active": "1fee98c3deab91d1",
   "lastOpenFiles": [
+    "To Do.md",
     "Unsorted.md",
     "Projections.md",
-    "Set Theory.md",
-    "To Do.md",
-    "Matrices.md",
-    "Derivatives.md",
+    "Distributions.md",
     "Combinatorics.md",
+    "Set Theory.md",
+    "Matrices.md",
     "Variance, Covariance & Correlation.md",
+    "Derivatives.md",
     "homework/BCI/Week 2.md",
     "Pasted image 20260914154411.png",
     "Pasted image 20260914154329.png",

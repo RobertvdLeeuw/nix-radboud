@@ -26,7 +26,7 @@ Flow networks (week 2, slides 72-84), to maximize flow: Ford-Fulkerson method (f
 
 
 ## Logistic regression (FDTM)
-$$\text{Sigmoid: } g(x) = \frac{1}{1+e^{-x}}, \space h(x) =g(w^Tx) = \frac{1}{1+e^{-w^Tx}}, \space g'(x) = g(z)(1-g(z))$$
+$$\text{Sigmoid: } g(x) = \frac{1}{1+e^{-x}}, \space h(x) =g(w^Tx) = \frac{1}{1+e^{-w^Tx+b}}, \space g'(x) = g(z)(1-g(z))$$
 
 ![[Pasted image 20260914153622.png|696]]
 
