@@ -64,7 +64,7 @@
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -231,17 +231,17 @@
       "bases:Create new base": false
     }
   },
-  "active": "1fee98c3deab91d1",
+  "active": "2d1e7e280c29a06c",
   "lastOpenFiles": [
-    "To Do.md",
     "Unsorted.md",
+    "Derivatives.md",
+    "Set Theory.md",
     "Projections.md",
+    "To Do.md",
     "Distributions.md",
     "Combinatorics.md",
-    "Set Theory.md",
     "Matrices.md",
     "Variance, Covariance & Correlation.md",
-    "Derivatives.md",
     "homework/BCI/Week 2.md",
     "Pasted image 20260914154411.png",
     "Pasted image 20260914154329.png",
