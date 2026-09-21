@@ -66,9 +66,7 @@ class MinMaxPlayer(PlayerController):
     Inherits from Playercontroller
     """
 
-    def __init__(
-        self, player_id: int, game_n: int, max_depth: int, heuristic: Heuristic, root_node: Node
-    ) -> None:
+    def __init__(self, player_id: int, game_n: int, max_depth: int, heuristic: Heuristic) -> None:
         """
         Args:
             player_id (int): id of a player, can take values 1 or 2 (0 = empty)
@@ -78,7 +76,6 @@ class MinMaxPlayer(PlayerController):
         """
         super().__init__(player_id, game_n, heuristic)
         self.max_depth: int = max_depth
-        self.tree: Node = root_node
 
     def make_move(self, board: Board) -> int:
         """Gets the column for the player to play in
@@ -90,28 +87,21 @@ class MinMaxPlayer(PlayerController):
             int: column to play in
         """
 
-        self.tree.expand_tree(self.max_depth, self.player_id)
+        def minimax(node: Node) -> float:
+            if node.is_leaf or node.is_terminal(self.heuristic, self.game_n):
+                return self.heuristic.evaluate_board(self.player_id, node.board)
 
-        best_move = np.argmax(map(self.minimax, tree.children))
+            eval_func = max if is_our_turn(node.abs_depth, self.player_id) else min
 
-        # Moves tree by one, but keeps root ref alive via node.parent for abs_depth
-        self.tree = self.tree.children[best_move]
+            return reduce(
+                lambda best, node: eval_func(best, minimax(node)),
+                node.children.values(),
+                -np.inf if is_our_turn(node.abs_depth, self.player_id) else np.inf,
+            )
 
-        return best_move
-
-    def minimax(self, node: Node) -> float:
-        if node.is_leaf or node.is_terminal(self.heuristic, self.game_n):
-            return self.heuristic.evaluate_board(self.player_id, node.board)
-
-        eval_func = max if is_our_turn(node.abs_depth, self.player_id) else min
-
-        best_eval = reduce(
-            lambda best, node: eval_func(best, self.minimax(node)),
-            node.children,
-            -np.inf if is_our_turn(node.abs_depth, self.player_id) else np.inf,
-        )
-
-        return best_eval
+        root = Node(board).expand_tree(self.max_depth, self.player_id)
+        return max(root.children, key=lambda c: minimax(root.children[c]))
+        # return np.argmax(map(minimax, root.children.values()))
 
 
 class AlphaBetaPlayer(PlayerController):
@@ -119,9 +109,7 @@ class AlphaBetaPlayer(PlayerController):
     Inherits from Playercontroller
     """
 
-    def __init__(
-        self, player_id: int, game_n: int, max_depth: int, heuristic: Heuristic, root_node: Node
-    ) -> None:
+    def __init__(self, player_id: int, game_n: int, max_depth: int, heuristic: Heuristic) -> None:
         """
         Args:
             player_id (int): id of a player, can take values 1 or 2 (0 = empty)
@@ -131,7 +119,6 @@ class AlphaBetaPlayer(PlayerController):
         """
         super().__init__(player_id, game_n, heuristic)
         self.max_depth: int = max_depth
-        self.tree: Node = root_node
 
     def make_move(self, board: Board) -> int:
         """Gets the column for the player to play in
@@ -142,41 +129,36 @@ class AlphaBetaPlayer(PlayerController):
         Returns:
             int: column to play in
         """
-        # TODO: Reuse old tree, node.find_state -> root.find_state
-        self.tree.expand_tree(self.max_depth, self.player_id)
 
-        best_move = np.argmax(map(self.minimaxpruning, tree.children))
+        def ab_prune(self, node: Node, alpha=-np.inf, beta=np.inf):
+            if node.is_leaf or node.is_terminal(self.heuristic, self.game_n):
+                return self.heuristic.evaluate_board(self.player_id, board)
 
-        # Moves tree by one, but keeps root ref alive via node.parent for abs_depth
-        self.tree = self.tree.children[best_move]
+            our_turn = is_our_turn(node.abs_depth, self.player_id)
+            eval_func = max if our_turn else min
 
-        return best_move
+            # Early termination in AB so we can't reduce :(
+            best_eval = float("-inf") if our_turn else float("inf")
 
-    def minimaxpruning(self, node: Node, alpha=-np.inf, beta=np.inf):
-        if node.is_leaf or node.is_terminal(self.heuristic, self.game_n):
-            return self.heuristic.evaluate_board(self.player_id, board)
+            # Must be faster to move child gen to in loop so we don't gen all (use early termination), but not gonna do that now.
+            # node.expand_tree(1, self.player_id)
 
-        our_turn = is_our_turn(node.abs_depth, self.player_id)
-        eval_func = max if our_turn else min
+            for n in node.children:
+                best_eval = eval_func(best_eval, self.ab_prune(n.board, alpha, beta))
 
-        # Early termination in AB so we can't reduce :(
-        best_eval = float("-inf") if our_turn else float("inf")
+                if our_turn:
+                    alpha = max(alpha, best_eval)
+                else:
+                    beta = min(beta, best_eval)
 
-        # Must be faster to move child gen to in loop so we don't gen all (use early termination), but not gonna do that now.
-        # node.expand_tree(1, self.player_id)
+                if beta <= alpha:
+                    break
 
-        for n in node.children:
-            best_eval = eval_func(best_eval, self.minimaxpruning(n.board, alpha, beta))
+            return best_eval
 
-            if our_turn:
-                alpha = max(alpha, best_eval)
-            else:
-                beta = min(beta, best_eval)
+        root = Node(board).expand_tree(self.max_depth, self.player_id)
 
-            if beta <= alpha:
-                break
-
-        return best_eval
+        return max(root.children, key=lambda c: ab_prune(root.children[c]))
 
 
 class HumanPlayer(PlayerController):
@@ -379,7 +361,7 @@ class MCController(PlayerController):
         self.time_s = time_s
         self.n_iterations = n_iterations
 
-        self.selection_start = selection_strat
+        self.selection_strat = selection_strat
         self.simulation_strat = simulation_strat
 
     def make_move(self, board: Board) -> int:
@@ -390,7 +372,7 @@ class MCController(PlayerController):
             node = root
 
             while not node.is_leaf and node.is_fully_expanded:
-                node = selection_strat(node)
+                node = self.selection_strat(node)
 
             # Expand
             if not node.is_terminal(self.heuristic, self.game_n) and not node.is_fully_expanded:
@@ -399,10 +381,10 @@ class MCController(PlayerController):
             # Simulate
             while not node.is_terminal(self.heuristic, self.game_n):
                 node.expand_tree(1, self.player_id)
-                node = simulation_strat(node)
+                node = self.simulation_strat(node)
 
             # Backprop
-            winner = player.heuristic.winning(node.board.get_board_state(), self.game_n)
+            winner = self.heuristic.winning(node.board.get_board_state(), self.game_n)
             score = 1 if winner == self.player_id else 0.5 if winner == -1 else 0
 
             node.backprop(score)
