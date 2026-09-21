@@ -55,7 +55,7 @@ Unlabeled data, independent components (maximize independence - minimized covari
 	Kurtosis hard to compute, so substitute with other measures of non-Gaussiansuch as negentropy (maximize), mutual information (minimize), likelyhood (maximize), etc 
 Unmix mixed signals
 
-ICA is underdetermined: can't determine variances, signs, or order of indipendent components
+ICA is underdetermined: can't determine variances, signs, or order of independent components
 Noisy data -> multiple component breakdowns: match components, pool data, test unmixing matrix on other data
 More sources than sensors: reduce with PCA, less sources than sensors: avoid arbitrary splits by (adding artifact signals?)
 
