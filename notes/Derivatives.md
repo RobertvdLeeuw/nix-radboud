@@ -35,3 +35,8 @@ Multivariable f(...) = >1 input, 1 output, multivariate $\vec{g}(\dots)$ = >1 in
 
 $$\text{Gradient of } J = \nabla J = \text{ vector of all first-order partial derivatives}$$
 $$\text{Hessian of } J = \nabla^2 J = \text{ matrix of all second-order partial derivatives}$$$$\text{Taylor Series: } f(\vec{x}) \approx P(\vec{x}) = f(\vec{a}) + \nabla f(\vec{a})^T(\vec{x} - \vec{a}) + \frac{(\vec{x} - \vec{a})^T \nabla^2 f(\vec{a})(\vec{x} - \vec{a})}{2!}+ \dots = \sum_i^\infty \frac{\nabla^i f(\vec{a})(\vec{x}-\vec{a})^i}{i!}$$
+## Multivariate/vector
+$$\frac{df}{dt} = \frac{\partial f}{\partial x} \frac{dx}{dt} + \frac{\partial f}{\partial y} \frac{dy}{dt}$$
+$$\text{Jacobian matrix: } J_f \in R^{m \times n}, \space [J_f]_{ij} = \frac{\partial f_i}{\partial x_j}, \space [J_f]_{i} = (\nabla f_i)^T$$
+$$h(\vec{x}) = f(g(\vec{x})) \Rightarrow J_h(\vec{x}) = J_f(g(\vec{x})) \cdot J_g(\vec{x})$$
+$$\text{Newton's Method: } \vec{x}_{k+1} = \vec{x}_k + \nabla^2 f(\vec{x}_k)^{-1} \nabla f(\vec{x}_k)$$

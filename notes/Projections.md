@@ -1,4 +1,4 @@
-1## PCA
+## PCA
 PCA determines a linear subspace (1 move mean of data to zero point, 2 rotate such that eigenvectors form new axes, 3 optionally scale data)
 Assumption: relevance is expressed by variance (which also includes noise/outliers/scaling/etc)
 	Dimensional reduction with PCA assumes only directions with high variance are important (eigenvectors with highest eigenvalues)

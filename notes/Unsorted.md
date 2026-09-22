@@ -77,3 +77,8 @@ Assumptions: linear mixing of signals, at least n-1 non-Gaussian sources, source
 CLT states that mixing non-Gaussian stuff makes it more Gaussian -> unmixing makes less Gaussian -> unmix using least Gaussian components
 	Gaussian distribution have excess kurtosis of 0 (Pearson kurtosis of -3)
 	Solving ICA -> maximize excess kurtosis -> 
+
+## Metrics:
+- **Cohens cappa:** inter annotation agreement
+- **Jaccard:** classification metric
+- 
