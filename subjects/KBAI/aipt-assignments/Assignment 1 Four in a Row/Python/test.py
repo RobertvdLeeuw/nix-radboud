@@ -20,12 +20,13 @@ from players import (
 GAME_N = 4
 WIDTH, HEIGHT = 7, 6
 START_BOARD = Board(WIDTH, HEIGHT)
+DUMMY_PLAYER = PlayerController(1, GAME_N, SimpleHeuristic(GAME_N))
 
 
 def test_tree():
-    tree_root = Node(START_BOARD)
+    tree_root = Node(START_BOARD, DUMMY_PLAYER)
 
-    assert len(tree_root.expand_tree(1, 1).children) == WIDTH, (
+    assert len(tree_root.expand_tree(1).children) == WIDTH, (
         f"Expected {START_BOARD.width} nodes on root expansion, got {len(tree_root.children)}"
     )
     assert tree_root.is_fully_expanded, "Expanding root tree didn't occur fully"
@@ -36,8 +37,8 @@ def test_tree():
         one_col_full.play(0, cur_turn)
         cur_turn = flip_player_turn[cur_turn]
 
-    one_col_full_node = Node(one_col_full)
-    assert len(one_col_full_node.expand_tree(1, 1).children) == WIDTH - 1, (
+    one_col_full_node = Node(one_col_full, DUMMY_PLAYER)
+    assert len(one_col_full_node.expand_tree(1).children) == WIDTH - 1, (
         f"Expected {START_BOARD.width} nodes on 1 column full expansion, got {len(tree_root.children)}"
     )
     assert one_col_full_node.is_fully_expanded, "Expanding 1 col full tree didn't occur fully"
@@ -68,7 +69,7 @@ def sanity_check_player(player: PlayerController):
 
     # Row
     for filled_row_start in range(WIDTH - GAME_N):
-        one_to_win, one_to_lose = np.zeros((width, height)), np.zeros((width, height))
+        one_to_win, one_to_lose = np.zeros((WIDTH, HEIGHT)), np.zeros((WIDTH, HEIGHT))
 
         row, col = np.indices((width, height))
         winner_mask = ((HEIGHT - row) == 0) & (filled_row_start <= col < filled_row_start + GAME_N)
@@ -87,7 +88,7 @@ def sanity_check_player(player: PlayerController):
 
     # Diagonal
     for filled_row_start in range(WIDTH - GAME_N):
-        one_to_win, one_to_lose = np.zeros((width, height)), np.zeros((width, height))
+        one_to_win, one_to_lose = np.zeros((WIDTH, HEIGHT)), np.zeros((WIDTH, HEIGHT))
 
         row, col = np.indices((WIDTH, HEIGHT))
         winner_mask = (HEIGHT - row) == (col + filled_row_start) & (

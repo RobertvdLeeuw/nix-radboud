@@ -23,7 +23,7 @@ START_BOARD = Board(6, 7)
 minimax_1 = MinMaxPlayer(
     1,
     GAME_N,
-    6,
+    4,
     SimpleHeuristic(GAME_N),
 )
 minimax_2 = MinMaxPlayer(

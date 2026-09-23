@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from functools import partial, reduce
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Self
 
 import numpy as np
 from sympy.strategies import condition
@@ -55,8 +55,8 @@ class PlayerController:
         pass
 
 
-def is_our_turn(abs_depth: int, player_id: int) -> bool:
-    return (abs_depth - player_id) % 2 == 0
+def is_our_turn(abs_depth: int) -> bool:
+    return abs_depth % 2 == 0
 
 
 flip_player_turn = {0: 0, 1: 2, 2: 1}
@@ -91,20 +91,20 @@ class MinMaxPlayer(PlayerController):
         """
 
         def minimax(node: Node) -> float:
-            if node.is_leaf or node.is_terminal(self.heuristic, self.game_n):
+            if node.abs_depth >= self.max_depth or node.is_terminal(self.heuristic, self.game_n):
                 return self.heuristic.evaluate_board(self.player_id, node.board)
 
-            eval_func = max if is_our_turn(node.abs_depth, self.player_id) else min
+            node.expand_tree(1)
+            eval_func = max if is_our_turn(node.abs_depth) else min
 
             return reduce(
-                lambda best, node: eval_func(best, minimax(node)),
+                lambda best, child: eval_func(best, minimax(child)),
                 node.children.values(),
-                -np.inf if is_our_turn(node.abs_depth, self.player_id) else np.inf,
+                -np.inf if is_our_turn(node.abs_depth) else np.inf,
             )
 
-        root = Node(board).expand_tree(self.max_depth, self.player_id)
+        root = Node(board, self).expand_tree(1)
         return max(root.children, key=lambda c: minimax(root.children[c]))
-        # return np.argmax(map(minimax, root.children.values()))
 
 
 class AlphaBetaPlayer(PlayerController):
@@ -135,21 +135,30 @@ class AlphaBetaPlayer(PlayerController):
             int: column to play in
         """
 
-        def ab_prune(self, node: Node, alpha=-np.inf, beta=np.inf) -> float:
-            if node.is_leaf or node.is_terminal(self.heuristic, self.game_n):
-                return self.heuristic.evaluate_board(self.player_id, board)
+        def ab_prune(
+            node: Node, alpha: float = -np.inf, beta: float = np.inf, return_move_instead=False
+        ) -> float | int:
+            if node.abs_depth >= self.max_depth or node.is_terminal(self.heuristic, self.game_n):
+                return self.heuristic.evaluate_board(self.player_id, node.board)
 
-            our_turn = is_our_turn(node.abs_depth, self.player_id)
+            our_turn = is_our_turn(node.abs_depth)
+
+            node.expand_tree(1)
             eval_func = max if our_turn else min
 
             # Early termination in AB so we can't reduce :(
-            best_eval = float("-inf") if our_turn else float("inf")
+            best_eval = -np.inf if our_turn else np.inf
+            best_move = None
 
             # Must be faster to move child gen to in loop so we don't gen all (use early termination), but not gonna do that now.
             # node.expand_tree(1, self.player_id)
 
-            for n in node.children:
-                best_eval = eval_func(best_eval, self.ab_prune(n.board, alpha, beta))
+            for col, child in node.children.values():
+                eval = ab_prune(child, alpha, beta)
+                best_eval = eval_func(best_eval, eval)
+
+                if best_eval == eval:
+                    best_move = col
 
                 if our_turn:
                     alpha = max(alpha, best_eval)
@@ -159,11 +168,11 @@ class AlphaBetaPlayer(PlayerController):
                 if beta <= alpha:
                     break
 
-            return best_eval
+            return best_move if return_move_instead else best_eval
 
-        root = Node(board).expand_tree(self.max_depth, self.player_id)
+        root = Node(board, self)
 
-        return max(root.children, key=lambda c: ab_prune(root.children[c]))
+        return ab_prune(root, return_move_instead=True)
 
 
 class HumanPlayer(PlayerController):
@@ -234,12 +243,14 @@ class Node:
     def __init__(
         self,
         board: Board,
+        player_owner: PlayerController,
         children: dict[int, Node] | None = None,
-        parent: Node | None = None,
+        parent: Self | None = None,
     ):
         self.board = board
         self.children = children or dict()  # col/move as int -> Node
         self.parent = parent
+        self.player_owner = player_owner
 
     @property
     def is_leaf(self) -> bool:
@@ -250,7 +261,7 @@ class Node:
         return self.parent is None
 
     @property
-    def root(self) -> Node:
+    def root(self) -> Self:
         return self if self.is_root else self.parent.root
 
     @property
@@ -264,38 +275,39 @@ class Node:
     def is_terminal(self, heuristic: Heuristic, game_n: int = 4) -> bool:
         return heuristic.winning(self.board.get_board_state(), game_n) != 0
 
-    def find_state(self, board: Board) -> Node | None:
-        if self.board == board:
-            return self
-
-        if self.is_leaf:
-            return None
-
-        child_results = [c.find_state(board) for c in self]
-
-        if any(child_results):
-            return next(filter(bool, child_results))
-
-    def add_child(self, col: int, player_id: int) -> Node:
+    def add_child(self, col: int) -> Self:
+        assert not self.is_terminal(self.player_owner.heuristic, self.player_owner.game_n), (
+            "Trying to create a child for a terminal node"
+        )
         assert col < self.board.width, "Move outside of game"
         assert self.board.is_valid(col), "Invalid move"
 
-        child = Node(self.board.get_new_board(col, player_id), parent=self)
+        player_id = (
+            self.player_owner.player_id
+            if is_our_turn(self.abs_depth)
+            else flip_player_turn[self.player_owner.player_id]
+        )
+
+        child = Node(
+            self.board.get_new_board(col, player_id),
+            self.player_owner,
+            parent=self,
+        )
         self.children[col] = child
 
-        return child  # TODO
+        return child
 
-    def expand_tree(self, depth: int, player_id: int) -> Node:
+    def expand_tree(self, depth: int) -> Self:
         # Fine for 4-in-a-row, not for Chess (explosion)
 
-        if depth == 0:
+        if depth == 0 or self.is_terminal(self.player_owner.heuristic, self.player_owner.game_n):
             return self
 
         for col in filter(self.board.is_valid, range(self.board.width)):
             if col not in self.children:
-                self.add_child(col, player_id).expand_tree(depth - 1, flip_player_turn[player_id])
+                self.add_child(col).expand_tree(depth - 1)
             else:
-                self.children[col].expand_tree(depth - 1, flip_player_turn[player_id])
+                self.children[col].expand_tree(depth - 1)
 
         return self
 
@@ -309,8 +321,14 @@ class Node:
 
 
 class MCNode(Node):
-    def __init__(self, board: Board, children: dict = None, parent: "Node" | None = None):
-        super().__init__(board, children, parent)
+    def __init__(
+        self,
+        board: Board,
+        player_owner: PlayerController,
+        children: dict = None,
+        parent: "Node" | None = None,
+    ):
+        super().__init__(board, player_owner, children, parent)
 
         self.visits: int = 0
         self.total_score: float = 0
@@ -322,28 +340,38 @@ class MCNode(Node):
         if self.parent:
             self.parent.backprop(score)
 
-    def add_child(self, col: int, player_id: int) -> Node:
+    def add_child(self, col: int) -> Self:
         assert col < self.board.width, "Move outside of game"
         assert self.board.is_valid(col), "Invalid move"
 
-        child = MCNode(self.board.get_new_board(col, player_id), parent=self)
+        player_id = (
+            self.player_owner.player_id
+            if is_our_turn(self.abs_depth)
+            else flip_player_turn[self.player_owner.player_id]
+        )
+
+        child = MCNode(self.board.get_new_board(col, player_id), self.player_owner, parent=self)
         self.children[col] = child
 
-        return self
+        return child
 
 
 def select_random(node: MCNode) -> MCNode:
-    return random.choice(list(node.children.values()))
+    return random.choice(list(node))
 
 
 def upper_conf_bound(node: MCNode, exploration_c: float) -> MCNode:
     def UCB(n: MCNode) -> float:
+        if n.visits == 0:
+            return np.inf
+
         avg_reward = n.total_score / n.visits
         ucb_term = exploration_c * np.sqrt(np.log(n.parent.visits) / n.visits)
 
         return avg_reward + ucb_term
 
-    return max(node.children, key=lambda c: UCB(node.children[c]))
+    best = max(node.children, key=lambda c: UCB(node.children[c]))
+    return node.children[best]
 
 
 class MCController(PlayerController):
@@ -373,32 +401,32 @@ class MCController(PlayerController):
         self.simulation_strat = simulation_strat
 
     def make_move(self, board: Board) -> int:
-        root = MCNode(board)
+        root = MCNode(board, self)
 
         def MC_iteration():
             # Select
-            node = root
+            node = self.selection_strat(root.expand_tree(1))
 
-            while True:
-                node = root
+            while not node.is_leaf and node.is_fully_expanded:
+                node.expand_tree(1)
 
-                while not node.is_leaf and node.is_fully_expanded:
-                    node = self.selection_strat(node)
-
-                if not node.is_terminal(self.heuristic, self.game_n):
-                    break
+                node = self.selection_strat(node)
 
             # Expand
-            node.expand_tree(1, self.player_id)
-            node = self.selection_strat(node)
+            if not node.is_terminal(self.heuristic, self.game_n):
+                node.expand_tree(1)
+                node = self.selection_strat(node)
 
             # Simulate
-            while not node.is_terminal(self.heuristic, self.game_n):
-                node.expand_tree(1, self.player_id)
-                node = self.simulation_strat(node)
+            playout_node = deepcopy(node)
+
+            while not playout_node.is_terminal(self.heuristic, self.game_n):
+                playout_node.expand_tree(1)
+
+                playout_node = self.simulation_strat(playout_node)
 
             # Backprop
-            winner = self.heuristic.winning(node.board.get_board_state(), self.game_n)
+            winner = self.heuristic.winning(playout_node.board.get_board_state(), self.game_n)
             score = 1 if winner == self.player_id else 0.5 if winner == -1 else 0
 
             node.backprop(score)
@@ -406,12 +434,10 @@ class MCController(PlayerController):
         if self.time_s:
             start = time.perf_counter()
 
-            while time.perf_counter() - start < self.time_s / 1000:
+            while time.perf_counter() - start < self.time_s:
                 MC_iteration()
         elif self.n_iterations:
             for _ in range(self.n_iterations):
                 MC_iteration()
 
-        return max(
-            root.children, key=lambda c: root.children[c].total_score / root.children[c].visits
-        )
+        return max(root.children, key=lambda c: root.children[c].visits)
