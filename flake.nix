@@ -67,6 +67,12 @@
                 rm -f $out/${python.sitePackages}/torio/lib/*torio_ffmpeg7*.so
               '';
             });
+
+            numba = prev.numba.overrideAttrs (old: {
+              buildInputs = (old.buildInputs or [ ]) ++ [
+                pkgs.tbb
+              ];
+            });
           })
         ]
       );
@@ -78,6 +84,7 @@
         packages = [
           venv
           pkgs.uv
+          # pkgs.python311Packages.numba
         ];
 
         env = {

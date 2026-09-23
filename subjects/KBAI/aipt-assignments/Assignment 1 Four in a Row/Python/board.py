@@ -2,7 +2,6 @@ from typing import List
 
 import numpy as np
 from heuristics import Heuristic, SimpleHeuristic
-from players import AlphaBetaPlayer, HumanPlayer, MinMaxPlayer, PlayerController
 
 
 class Board:

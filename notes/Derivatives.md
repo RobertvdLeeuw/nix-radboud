@@ -39,4 +39,4 @@ $$\text{Hessian of } J = \nabla^2 J = \text{ matrix of all second-order partial 
 $$\frac{df}{dt} = \frac{\partial f}{\partial x} \frac{dx}{dt} + \frac{\partial f}{\partial y} \frac{dy}{dt}$$
 $$\text{Jacobian matrix: } J_f \in R^{m \times n}, \space [J_f]_{ij} = \frac{\partial f_i}{\partial x_j}, \space [J_f]_{i} = (\nabla f_i)^T$$
 $$h(\vec{x}) = f(g(\vec{x})) \Rightarrow J_h(\vec{x}) = J_f(g(\vec{x})) \cdot J_g(\vec{x})$$
-$$\text{Newton's Method: } \vec{x}_{k+1} = \vec{x}_k + \nabla^2 f(\vec{x}_k)^{-1} \nabla f(\vec{x}_k)$$
+$$\text{Newton's Method: } \vec{x}_{k+1} = \vec{x}_k + \nabla^2 f(\vec{x}_k)^{-1} \nabla f(\vec{x}_k)$

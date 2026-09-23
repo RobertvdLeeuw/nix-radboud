@@ -5,6 +5,7 @@ from functools import partial, reduce
 from typing import TYPE_CHECKING, Callable
 
 import numpy as np
+from sympy.strategies import condition
 
 if TYPE_CHECKING:
     from board import Board
@@ -66,6 +67,8 @@ class MinMaxPlayer(PlayerController):
     Inherits from Playercontroller
     """
 
+    name = "Minimax"
+
     def __init__(self, player_id: int, game_n: int, max_depth: int, heuristic: Heuristic) -> None:
         """
         Args:
@@ -109,6 +112,8 @@ class AlphaBetaPlayer(PlayerController):
     Inherits from Playercontroller
     """
 
+    name = "AB Prune"
+
     def __init__(self, player_id: int, game_n: int, max_depth: int, heuristic: Heuristic) -> None:
         """
         Args:
@@ -130,7 +135,7 @@ class AlphaBetaPlayer(PlayerController):
             int: column to play in
         """
 
-        def ab_prune(self, node: Node, alpha=-np.inf, beta=np.inf):
+        def ab_prune(self, node: Node, alpha=-np.inf, beta=np.inf) -> float:
             if node.is_leaf or node.is_terminal(self.heuristic, self.game_n):
                 return self.heuristic.evaluate_board(self.player_id, board)
 
@@ -233,7 +238,7 @@ class Node:
         parent: Node | None = None,
     ):
         self.board = board
-        self.children = children or {}  # col/move as int -> Node
+        self.children = children or dict()  # col/move as int -> Node
         self.parent = parent
 
     @property
@@ -254,10 +259,10 @@ class Node:
 
     @property
     def abs_depth(self) -> int:
-        return 0 if self.is_root else self.parent.abs_depth() + 1
+        return 0 if self.is_root else self.parent.abs_depth + 1
 
     def is_terminal(self, heuristic: Heuristic, game_n: int = 4) -> bool:
-        return heuristic.winning(board.get_board_state(), game_n) != 0
+        return heuristic.winning(self.board.get_board_state(), game_n) != 0
 
     def find_state(self, board: Board) -> Node | None:
         if self.board == board:
@@ -278,7 +283,7 @@ class Node:
         child = Node(self.board.get_new_board(col, player_id), parent=self)
         self.children[col] = child
 
-        return self
+        return child  # TODO
 
     def expand_tree(self, depth: int, player_id: int) -> Node:
         # Fine for 4-in-a-row, not for Chess (explosion)
@@ -286,11 +291,11 @@ class Node:
         if depth == 0:
             return self
 
-        for col in range(self.board.width):
-            if node := self.children[col]:
-                node.expand_tree(depth - 1, flip_player_turn[player_id])
+        for col in filter(self.board.is_valid, range(self.board.width)):
+            if col not in self.children:
+                self.add_child(col, player_id).expand_tree(depth - 1, flip_player_turn[player_id])
             else:
-                self.add_child(col, player_id).expand_tree(depth - 1, not player_id)
+                self.children[col].expand_tree(depth - 1, flip_player_turn[player_id])
 
         return self
 
@@ -299,7 +304,8 @@ class Node:
 
     @property
     def is_fully_expanded(self) -> bool:
-        return len(self.children) == self.board.width
+        total_valid = filter(self.board.is_valid, range(self.board.width))
+        return len(self.children) == len(list(total_valid))
 
 
 class MCNode(Node):
@@ -341,6 +347,8 @@ def upper_conf_bound(node: MCNode, exploration_c: float) -> MCNode:
 
 
 class MCController(PlayerController):
+    name = "Monte Carlo"
+
     def __init__(
         self,
         player_id: int,
@@ -371,12 +379,18 @@ class MCController(PlayerController):
             # Select
             node = root
 
-            while not node.is_leaf and node.is_fully_expanded:
-                node = self.selection_strat(node)
+            while True:
+                node = root
+
+                while not node.is_leaf and node.is_fully_expanded:
+                    node = self.selection_strat(node)
+
+                if not node.is_terminal(self.heuristic, self.game_n):
+                    break
 
             # Expand
-            if not node.is_terminal(self.heuristic, self.game_n) and not node.is_fully_expanded:
-                node.expand_tree(1, self.player_id)
+            node.expand_tree(1, self.player_id)
+            node = self.selection_strat(node)
 
             # Simulate
             while not node.is_terminal(self.heuristic, self.game_n):
