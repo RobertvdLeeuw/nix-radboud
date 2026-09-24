@@ -103,7 +103,13 @@ class MinMaxPlayer(PlayerController):
                 -np.inf if is_our_turn(node.abs_depth) else np.inf,
             )
 
-        root = Node(board, self).expand_tree(1)
+        root = Node(board, self)
+
+        assert not root.is_terminal(self.heuristic, self.game_n), (
+            "Trying to minimax from terminal node"
+        )
+
+        root.expand_tree(1)
         return max(root.children, key=lambda c: minimax(root.children[c]))
 
 
@@ -153,11 +159,13 @@ class AlphaBetaPlayer(PlayerController):
             # Must be faster to move child gen to in loop so we don't gen all (use early termination), but not gonna do that now.
             # node.expand_tree(1, self.player_id)
 
-            for col, child in node.children.values():
+            for col, child in node.children.items():
                 eval = ab_prune(child, alpha, beta)
+
+                old_best = best_eval
                 best_eval = eval_func(best_eval, eval)
 
-                if best_eval == eval:
+                if best_eval != old_best:
                     best_move = col
 
                 if our_turn:
@@ -171,7 +179,6 @@ class AlphaBetaPlayer(PlayerController):
             return best_move if return_move_instead else best_eval
 
         root = Node(board, self)
-
         return ab_prune(root, return_move_instead=True)
 
 
@@ -401,8 +408,6 @@ class MCController(PlayerController):
         self.simulation_strat = simulation_strat
 
     def make_move(self, board: Board) -> int:
-        root = MCNode(board, self)
-
         def MC_iteration():
             # Select
             node = self.selection_strat(root.expand_tree(1))
@@ -430,6 +435,11 @@ class MCController(PlayerController):
             score = 1 if winner == self.player_id else 0.5 if winner == -1 else 0
 
             node.backprop(score)
+
+        root = MCNode(board, self)
+        assert not root.is_terminal(self.heuristic, self.game_n), (
+            "Trying to MCTS from terminal node"
+        )
 
         if self.time_s:
             start = time.perf_counter()

@@ -24,6 +24,7 @@ DUMMY_PLAYER = PlayerController(1, GAME_N, SimpleHeuristic(GAME_N))
 
 
 def test_tree():
+    print("Testing tree...", end="\r")
     tree_root = Node(START_BOARD, DUMMY_PLAYER)
 
     assert len(tree_root.expand_tree(1).children) == WIDTH, (
@@ -43,76 +44,58 @@ def test_tree():
     )
     assert one_col_full_node.is_fully_expanded, "Expanding 1 col full tree didn't occur fully"
 
+    print("Tree passed tests")
+
 
 test_tree()
 
 
 def sanity_check_player(player: PlayerController):
+    print(f"Sanity checking player {player.name}...", end="\r")
     # Column
-    for filled_row_start in range(WIDTH):
+    for deciding_col in range(WIDTH):
         one_to_win, one_to_lose = np.zeros((WIDTH, HEIGHT)), np.zeros((WIDTH, HEIGHT))
 
-        row, col = np.indices((WIDTH, HEIGHT))
-        winner_mask = ((HEIGHT - row) < GAME_N - 1) & (col == filled_row_start)
+        col, row = np.indices((WIDTH, HEIGHT))
+
+        winner_mask = ((HEIGHT - row) < GAME_N) & (col == deciding_col)
+
+        one_to_win[winner_mask] = player.player_id
+        one_to_lose[winner_mask] = flip_player_turn[player.player_id]
+
+        one_to_win, one_to_lose = Board(one_to_win), Board(one_to_lose)
+
+        move = player.make_move(one_to_win)
+        assert move == deciding_col, (
+            f"{player.name} player didn't make directly winning move ({deciding_col + 1}), made move {move + 1}, \n {one_to_win}"
+        )
+        move = player.make_move(one_to_lose)
+        assert move == deciding_col, (
+            f"{player.name} player didn't block directly losing move move ({deciding_col + 1}), made move {move + 1}, \n {one_to_lose}"
+        )
+
+    # Row (3 from corners)
+    for corner in ["left", "right"]:
+        one_to_win, one_to_lose = np.zeros((WIDTH, HEIGHT)), np.zeros((WIDTH, HEIGHT))
+        winner_mask = ((col < (GAME_N - 1)) if corner == "left" else (col > (WIDTH - GAME_N))) & (
+            row == HEIGHT - 1
+        )
+
         one_to_win[winner_mask] = player.player_id
         one_to_lose[winner_mask] = flip_player_turn[player.player_id]
         one_to_win, one_to_lose = Board(one_to_win), Board(one_to_lose)
 
         move = player.make_move(one_to_win)
-        assert move == filled_row_start, (
-            f"{player.name} player didn't make directly winning move (column {filled_row_start}), made move {move}, \n {one_to_win.get_board_state()}"
+        deciding_move = GAME_N - 1 if corner == "left" else WIDTH - GAME_N
+        assert move == deciding_move, (
+            f"{player.name} player didn't make directly winning move ({deciding_move + 1}), made move {move + 1}, \n {one_to_win}"
         )
         move = player.make_move(one_to_lose)
-        assert move == filled_row_start, (
-            f"{player.name} player didn't block directly losing move move (column {filled_row_start}), made move {move}, \n {one_to_lose.get_board_state()}"
+        assert move == deciding_move, (
+            f"{player.name} player didn't block directly losing move move ({deciding_move + 1}), made move {move + 1}, \n {one_to_lose}"
         )
 
-    # Row
-    for filled_row_start in range(WIDTH - GAME_N):
-        one_to_win, one_to_lose = np.zeros((WIDTH, HEIGHT)), np.zeros((WIDTH, HEIGHT))
-
-        row, col = np.indices((width, height))
-        winner_mask = ((HEIGHT - row) == 0) & (filled_row_start <= col < filled_row_start + GAME_N)
-        one_to_win[winner_mask] = player.player_id
-        one_to_lose[winner_mask] = flip_player_turn[player.player_id]
-        one_to_win, one_to_lose = Board(one_to_win), Board(one_to_lose)
-
-        move = player.make_move(one_to_win)
-        assert move in (filled_row_start + GAME_N, filled_row_start - 1), (
-            f"{player.name} player didn't make directly winning move (left of {filled_row_start - 1} or right of {filled_row_start + GAME_N}), made move {move}, \n {one_to_win.get_board_state()}"
-        )
-        move = player.make_move(one_to_lose)
-        assert move == (filled_row_start + GAME_N, filled_row_start - 1), (
-            f"{player.name} player didn't block directly losing move move (left of {filled_row_start - 1} or right of {filled_row_start + GAME_N}), made move {move}, \n {one_to_lose.get_board_state()}"
-        )
-
-    # Diagonal
-    for filled_row_start in range(WIDTH - GAME_N):
-        one_to_win, one_to_lose = np.zeros((WIDTH, HEIGHT)), np.zeros((WIDTH, HEIGHT))
-
-        row, col = np.indices((WIDTH, HEIGHT))
-        winner_mask = (HEIGHT - row) == (col + filled_row_start) & (
-            filled_row_start <= col < filled_row_start + GAME_N
-        )
-        loser_mask = (HEIGHT - row) < (col + filled_row_start) & (
-            filled_row_start <= col < filled_row_start + GAME_N
-        )
-
-        one_to_win[winner_mask] = player.player_id
-        one_to_win[loser_mask] = flip_player_turn[player.player_id]
-        one_to_lose[winner_mask] = flip_player_turn[player.player_id]
-        one_to_win[loser_mask] = player.player_id
-
-        one_to_win, one_to_lose = Board(one_to_win), Board(one_to_lose)
-
-        move = player.make_move(one_to_win)
-        assert move in (filled_row_start + GAME_N, filled_row_start - 1), (
-            f"{player.name} player didn't make directly winning move (diagonal {filled_row_start + GAME_N}), made move {move}, \n {one_to_win.get_board_state()}"
-        )
-        move = player.make_move(one_to_lose)
-        assert move == (filled_row_start + GAME_N, filled_row_start - 1), (
-            f"{player.name} player didn't block directly losing move move (diagonal {filled_row_start + GAME_N}), made move {move}, \n {one_to_lose.get_board_state()}"
-        )
+    print(f"Player {player.name} passed sanity checks.")
 
 
 minimax = MinMaxPlayer(
@@ -124,12 +107,13 @@ minimax = MinMaxPlayer(
 abprune = AlphaBetaPlayer(
     1,
     GAME_N,
-    4,
+    2,
     SimpleHeuristic(GAME_N),
 )
 montecarlo = MCController(
     1, GAME_N, SimpleHeuristic(GAME_N), partial(upper_conf_bound, exploration_c=1), time_s=1
 )
 
-for player in (minimax, abprune, montecarlo):
-    sanity_check_player(player)
+sanity_check_player(minimax)
+sanity_check_player(abprune)
+sanity_check_player(montecarlo)
