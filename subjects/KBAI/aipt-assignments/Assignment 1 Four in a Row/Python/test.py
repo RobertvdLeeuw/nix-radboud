@@ -1,3 +1,4 @@
+import random
 from copy import deepcopy
 from functools import partial
 
@@ -16,6 +17,9 @@ from players import (
     flip_player_turn,
     upper_conf_bound,
 )
+
+random.seed(0)
+
 
 GAME_N = 4
 WIDTH, HEIGHT = 7, 6
@@ -111,7 +115,7 @@ abprune = AlphaBetaPlayer(
     SimpleHeuristic(GAME_N),
 )
 montecarlo = MCController(
-    1, GAME_N, SimpleHeuristic(GAME_N), partial(upper_conf_bound, exploration_c=1), time_s=1
+    1, GAME_N, SimpleHeuristic(GAME_N), partial(upper_conf_bound, exploration_c=1), n_iterations=500
 )
 
 sanity_check_player(minimax)
