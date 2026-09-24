@@ -1,13 +1,14 @@
 
 ## Expectation
-$\mathbb{E}[X] = \sum_{s \in S} X(s)P(s)$
+$\mathbb{E}[X] = \sum_{s \in S} X(s)P(s) = \sum_{x \in R_x} xP_X(x)$
 Constants: $c \in \mathbb{R} \Rightarrow \mathbb{E}[\text{c}] = \text{c}$
 Linear adding: $\mathbb{E} [aX + bY] = a\mathbb{E}[X] + b\mathbb{E}[Y] \text{, regardless of whether X and Y are independent}$
+$\mathbb{E}[\mathbb{E}[X]] = \mathbb{E}[X], \space \mathbb{E}[X] \cdot \mathbb{E}[X] = (\mathbb{E}[X])^2, \space \mathbb{E}[\mathbb{E}[X]^2] = \mathbb{E}[X]^2, \space \mathbb{E}[X \cdot \mathbb{E}[X]] = \mathbb{E}[X] \cdot \mathbb{E}[X]$
 
 ### Variance:
 $Var[X] = \mathbb{E}[(X - \mu_X)^2]$
 $Var[X] \ge 0, \space \text{X is constant (takes 1 value)} \Rightarrow Var[X] = 0, \space Var[X+c] = Var[X]$
-$Var[\alpha X] = \alpha^2 Var[X], \space Std[\alpha X] = |alpha| Std[X]$
+$Var[\alpha X] = \alpha^2 Var[X], \space Std[ \alpha X] = |\alpha| Std[X]$
 $Var[X] = \mathbb{E}[X^2] - \mathbb{E}[X]^2$
 If X and Y independent: $Var[X+Y] = Var[X] + Var[Y]$
 
@@ -25,7 +26,8 @@ $\mathbb{E}[X] = \mathbb{E}[X_1] + \mathbb{E}[X_2]+ \dots = \overbrace{p \cdot p
 $Var[X] = np(p-1)$
 
 ## Geometric: $X \sim Geometric(p)$
-Consider a coin with $P (H) = p$. Toss the coin $k$ times until first Heads. How many tosses?
+Probability of $k$ Bernoulli trials resulting in only last trial succeeding, ie. $P(\text{Binomial}(k-1) = 0) * p$
+
 $P_X(k) = p(1-p)^{k-1}$
 
 ## Uniform: $X \sim Unif(a, b)$

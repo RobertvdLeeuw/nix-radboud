@@ -48,7 +48,7 @@ def test_tree():
     )
     assert one_col_full_node.is_fully_expanded, "Expanding 1 col full tree didn't occur fully"
 
-    print("Tree passed tests")
+    print("Tree passed tests.")
 
 
 test_tree()

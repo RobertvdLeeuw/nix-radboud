@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Distributions.md",
+                "file": "Derivatives.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Distributions"
+              "title": "Derivatives"
             }
           },
           {
@@ -232,12 +232,12 @@
   },
   "active": "73f2d3ed02b8bad0",
   "lastOpenFiles": [
+    "Distributions.md",
     "Derivatives.md",
     "Unsorted.md",
     "Projections.md",
     "Matrices.md",
     "Variance, Covariance & Correlation.md",
-    "Distributions.md",
     "Set Theory.md",
     "Pasted image 20260922140553.png",
     "To Do.md",
