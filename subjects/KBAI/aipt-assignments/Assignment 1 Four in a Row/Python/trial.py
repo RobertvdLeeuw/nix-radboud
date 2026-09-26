@@ -50,6 +50,9 @@ def trial(
 
     players = [player_1, player_2]
 
+    player_1.player_id = 1
+    player_2.player_id = 2
+
     def round() -> bool:
         board = Board(6, 7)
 
@@ -73,5 +76,7 @@ def trial(
         p1_wins += round()
         print(f"Round {n}, p1 wins: {p1_wins}    ", end="\r")
 
+    return p1_wins
 
-trial(minimax_1, minimax_2, SimpleHeuristic(GAME_N))
+
+# trial(minimax_1, minimax_2, SimpleHeuristic(GAME_N))

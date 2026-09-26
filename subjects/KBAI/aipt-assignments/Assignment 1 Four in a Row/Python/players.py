@@ -80,6 +80,12 @@ class MinMaxPlayer(PlayerController):
         super().__init__(player_id, game_n, heuristic)
         self.max_depth: int = max_depth
 
+    def __str__(self) -> str:
+        return f"{self.name} (depth={self.max_depth})"
+
+    def __repr__(self) -> str:
+        return str(self)
+
     def make_move(self, board: Board) -> int:
         """Gets the column for the player to play in
 
@@ -130,6 +136,12 @@ class AlphaBetaPlayer(PlayerController):
         """
         super().__init__(player_id, game_n, heuristic)
         self.max_depth: int = max_depth
+
+    def __str__(self) -> str:
+        return f"{self.name} (depth={self.max_depth})"
+
+    def __repr__(self) -> str:
+        return str(self)
 
     def make_move(self, board: Board) -> int:
         """Gets the column for the player to play in
@@ -367,18 +379,25 @@ def select_random(node: MCNode) -> MCNode:
     return random.choice(list(node))
 
 
-def upper_conf_bound(node: MCNode, exploration_c: float) -> MCNode:
-    def UCB(n: MCNode) -> float:
-        if n.visits == 0:
-            return np.inf
+select_random.name = "Random policy"
 
-        avg_reward = n.total_score / n.visits
-        ucb_term = exploration_c * np.sqrt(np.log(n.parent.visits) / n.visits)
 
-        return avg_reward + ucb_term
+def upper_conf_bound(exploration_c: float) -> Callable:
+    def inner(node: MCNode) -> MCNode:
+        def UCB(n: MCNode) -> float:
+            if n.visits == 0:
+                return np.inf
 
-    best = max(node.children, key=lambda c: UCB(node.children[c]))
-    return node.children[best]
+            avg_reward = n.total_score / n.visits
+            ucb_term = exploration_c * np.sqrt(np.log(n.parent.visits) / n.visits)
+
+            return avg_reward + ucb_term
+
+        best = max(node.children, key=lambda c: UCB(node.children[c]))
+        return node.children[best]
+
+    inner.name = f"UCB (c={exploration_c})"
+    return inner
 
 
 class MCController(PlayerController):
@@ -406,6 +425,13 @@ class MCController(PlayerController):
 
         self.selection_strat = selection_strat
         self.simulation_strat = simulation_strat
+
+    def __str__(self) -> str:
+        limit_factor = f"time={self.time_s}s" if self.time_s else f"iterations={self.n_iterations}"
+        return f"{self.name} ({limit_factor}, select={self.selection_strat.name}, {self.simulation_strat.name})"
+
+    def __repr__(self) -> str:
+        return str(self)
 
     def make_move(self, board: Board) -> int:
         def MC_iteration():
