@@ -24,10 +24,12 @@ To argmax, differentiate by $w$, assume Linear Discriminant Analysis, solve for 
 ![[Pasted image 20260909162953.png]]
 Flow networks (week 2, slides 72-84), to maximize flow: Ford-Fulkerson method (find edge with min unused capacity (bottleneck), try to draw line from sink s to source t (augmenting path, how is unspecified), add the delta capacity to the bottleneck edge, add -delta capacity to the other edges in the line but with reverse direction (residual edges)), max-flow min-cut theorem proves it.
 
+$$\text{Simulated annealing: } P(\text{accept}) = e^{\frac{f(x) - f(x')}{T}} , \space T_n =  T_{n-1}\cdot\lambda^t$$
 
-## Logistic regression (FDTM)
+
+## Logistic regression (FDTM + BCI)
 $$\text{Sigmoid: } g(x) = \frac{1}{1+e^{-x}}, \space h(x) =g(w^Tx) = \frac{1}{1+e^{-w^Tx+b}}, \space g'(x) = g(z)(1-g(z))$$
-
+$$J(w) = ||H_w(x), y||^2 \text{ but quadratic, so easier to use: } J(h_w(x), y) = y \cdot \overbrace{-ln(h_w(x))}^{\text{cost if }y=1} - ((1-y)\overbrace{ln(1-h_w(x))}^{\text{cost if }y=0})$$
 ![[Pasted image 20260914153622.png|696]]
 
 $$ p(y=1|x, w) = h_w(x) \land p(y=0|x, w) = 1- h_w(x) \rightarrow \text{Hypothesis function: } p(y|x, w) = h_w(x)^y (1-h_w(x))^{1-y}$$

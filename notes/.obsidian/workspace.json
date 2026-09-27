@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Derivatives.md",
+                "file": "Unsorted.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Derivatives"
+              "title": "Unsorted"
             }
           },
           {
@@ -97,7 +97,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "kurtosis",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -232,16 +232,16 @@
   },
   "active": "73f2d3ed02b8bad0",
   "lastOpenFiles": [
-    "Distributions.md",
-    "Derivatives.md",
+    "Set Theory.md",
     "Unsorted.md",
     "Projections.md",
-    "Matrices.md",
+    "Distributions.md",
     "Variance, Covariance & Correlation.md",
-    "Set Theory.md",
+    "Combinatorics.md",
+    "Matrices.md",
+    "Derivatives.md",
     "Pasted image 20260922140553.png",
     "To Do.md",
-    "Combinatorics.md",
     "homework/BCI/Week 2.md",
     "Pasted image 20260914154411.png",
     "Pasted image 20260914154329.png",

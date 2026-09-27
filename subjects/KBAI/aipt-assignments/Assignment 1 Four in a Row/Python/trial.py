@@ -1,5 +1,6 @@
 from copy import deepcopy
 from functools import partial
+from threading import Lock
 
 import numpy as np
 from board import Board
@@ -44,9 +45,17 @@ montecarlo = MCController(
 
 
 def trial(
-    player_1: PlayerController, player_2: PlayerController, judge: Heuristic, n_rounds: int = 100
+    player_1: PlayerController,
+    player_2: PlayerController,
+    judge: Heuristic,
+    n_rounds: int = 100,
+    data_store: dict = None,
+    lock: Lock = None,
 ) -> int:
     """Returns amount of times player 1 won."""
+
+    # print(f"DS: {data_store}, L: {lock}")
+    # assert (data_store is None) != (lock is None), "Must pass data store and lock together"
 
     players = [player_1, player_2]
 
@@ -76,7 +85,11 @@ def trial(
         p1_wins += round()
         print(f"Round {n}, p1 wins: {p1_wins}    ", end="\r")
 
-    return p1_wins
+    if data_store is None:
+        return p1_wins
+
+    with lock:
+        data_store[(str(player_1), str(player_2))] = p1_wins
 
 
 # trial(minimax_1, minimax_2, SimpleHeuristic(GAME_N))

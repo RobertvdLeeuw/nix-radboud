@@ -1,5 +1,6 @@
 from copy import deepcopy
 from functools import partial
+from threading import Lock, Thread
 from time import perf_counter
 
 import frozenlist
@@ -8,6 +9,7 @@ import numpy as np
 import seaborn as sns
 from board import Board
 from heuristics import Heuristic, SimpleHeuristic
+from matplotlib.colors import LinearSegmentedColormap
 from players import (
     AlphaBetaPlayer,
     HumanPlayer,
@@ -41,8 +43,10 @@ COLORS = ["orange", "blue", "green", "purple", "red", "yellow"]
 
 
 def plot_eval_depth_scaling(players: list[PlayerController], depths: list[int]):
+    results, lock = dict(), Lock()
+
     def test_n_evals(p: PlayerController, depth: int):
-        print(f"Evaluating {p.name} at depth {depth}...         ", end="\r")
+        # print(f"Evaluating {p.name} at depth {depth}...         ", end="\r")
         player = deepcopy(p)
         player.heuristic = SimpleHeuristic(GAME_N)
         player.max_depth = depth
@@ -51,9 +55,17 @@ def plot_eval_depth_scaling(players: list[PlayerController], depths: list[int]):
         player.make_move(deepcopy(START_BOARD))
         end = perf_counter()
 
-        return player.heuristic.eval_count, end - start
+        with lock:
+            results[(p, depth)] = player.heuristic.eval_count, end - start
 
-    results = [[test_n_evals(p, d) for d in depths] for p in players]
+    threads = [Thread(target=test_n_evals, args=(p, d)) for d in depths for p in players]
+
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    results = [[results[(p, d)] for d in depths] for p in players]
     print("Scaling evaluation done.                                                 ")
 
     fig, evals_ax = plt.subplots(figsize=(8, 12))
@@ -81,6 +93,8 @@ def plot_eval_depth_scaling(players: list[PlayerController], depths: list[int]):
 
 
 def plot_MC_iteration_scaling(Ns: list[int]):
+    results, lock = dict(), Lock()
+
     def test_time(n: int):
         print(f"Evaluating MCTS with {n} iterations...         ", end="\r")
         player = MCController(
@@ -91,18 +105,26 @@ def plot_MC_iteration_scaling(Ns: list[int]):
         player.make_move(deepcopy(START_BOARD))
         end = perf_counter()
 
-        return end - start
+        with lock:
+            results[n] = end - start
 
-    plt.title = ("Scaling with iterations (in seconds)",)
-    plt.ylabel = ("Seconds",)
-    plt.yscale = ("log",)
-    plt.xlabel = ("Iterations",)
-    plt.plot([test_time(n) for n in Ns])
+    threads = [Thread(target=test_time, args=(n,)) for n in Ns]
+
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    plt.plot(results.keys(), results.values())
+    plt.title("MCTS scaling with iterations (in seconds)")
+    plt.ylabel("Seconds")
+    plt.yscale("log")
+    plt.xlabel("Iterations")
     print("MC scaling evaluation done.                                                 ")
     plt.savefig("MC-Scaling.png")
 
 
-plot_MC_iteration_scaling([10, 50, 100])  # , 200, 300, 500, 1000])
+# plot_MC_iteration_scaling([50, 75, 100, 200, 300, 500, 750, 1000])
 
 # plot_eval_depth_scaling([minimax, abprume, montecarlo], range(1, 8))
 
@@ -110,22 +132,41 @@ plot_MC_iteration_scaling([10, 50, 100])  # , 200, 300, 500, 1000])
 from itertools import combinations_with_replacement, product
 
 
-def plot_battle(players: list[PlayerController], judge: Heuristic, n_rounds: int = 100):
-    # No need to compute X vs Y and Y vs X
-    trials = {
-        frozenset([p1, p2]): trial(p1, p2, judge, n_rounds)
-        for p1, p2 in combinations_with_replacement(players, 2)
-    }
-    results = [[trials[frozenset([p1, p2])] for p2 in players] for p1 in players]
+def plot_battle(
+    players: list[PlayerController],
+    judge: Heuristic,
+    n_rounds: int = 100,
+    filename: str = "Battles.png",
+    labels: list[str] = (),
+):
+    trials, lock = dict(), Lock()
 
-    _, ax = plt.subplots(figsize=(8, 8), layout="constrained")
-    ax.matshow(results, cmap="RdYlBu")
+    # No need to compute X vs Y and Y vs X
+    threads = [
+        Thread(target=trial, args=(p1, p2, judge, n_rounds, trials, lock))
+        for p1, p2 in combinations_with_replacement(players, 2)
+    ]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    trials.update({(p2, p1): n_rounds - trials[(p1, p2)] for p1, p2 in trials if p1 != p2})
+
+    results = [[trials[(str(p1), str(p2))] for p2 in players] for p1 in players]
+
+    _, ax = plt.subplots(figsize=(12, 12), layout="constrained")
+
+    cmap = LinearSegmentedColormap.from_list(
+        "my_gradient", [(0, "red"), (0.5, "white"), (1, "green")]
+    )
+    ax.matshow(results, cmap=cmap)
     ax.set(
         title=f"Results of {n_rounds} rounds",
         xticks=np.arange(len(players)),
         yticks=np.arange(len(players)),
-        xticklabels=players,
-        yticklabels=players,
+        xticklabels=labels or players,
+        yticklabels=labels or players,
         ylabel="Player 1",
         xlabel="Player 2",
     )
@@ -134,12 +175,22 @@ def plot_battle(players: list[PlayerController], judge: Heuristic, n_rounds: int
         ax.text(
             j,
             i,
-            f"{players[i].name} wins: {p1_wins} ({round(p1_wins / n_rounds * 100, 2)}%)",
+            f"{labels[i] if labels else players[i].name} wins: {p1_wins}\n({round(p1_wins / n_rounds * 100, 2)}%)",
             ha="center",
             va="center",
         )
 
-    plt.savefig("Battles.png")
+    plt.savefig(filename)
 
 
 # plot_battle([minimax, abprune, montecarlo], SimpleHeuristic(GAME_N), 10)
+mc_players = []
+mc_labels = []
+for c in [0.01, 0.5, 1, 1.5, 2]:
+    p = deepcopy(montecarlo)
+    p.selection_strat = upper_conf_bound(c)
+    p.n_iterations = 800
+    mc_players.append(p)
+    mc_labels.append(f"MCTS (c={c})")
+
+plot_battle(mc_players, SimpleHeuristic(GAME_N), 20, "MC-battles.png", mc_labels)
