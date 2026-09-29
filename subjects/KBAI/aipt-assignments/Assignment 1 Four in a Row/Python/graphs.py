@@ -118,15 +118,14 @@ def plot_MC_iteration_scaling(Ns: list[int]):
     plt.plot(results.keys(), results.values())
     plt.title("MCTS scaling with iterations (in seconds)")
     plt.ylabel("Seconds")
-    plt.yscale("log")
+    # plt.yscale("log")
     plt.xlabel("Iterations")
     print("MC scaling evaluation done.                                                 ")
     plt.savefig("MC-Scaling.png")
 
 
+# plot_eval_depth_scaling([minimax, abprume], range(1, 8))
 # plot_MC_iteration_scaling([50, 75, 100, 200, 300, 500, 750, 1000])
-
-# plot_eval_depth_scaling([minimax, abprume, montecarlo], range(1, 8))
 
 
 from itertools import combinations_with_replacement, product
@@ -135,23 +134,21 @@ from itertools import combinations_with_replacement, product
 def plot_battle(
     players: list[PlayerController],
     judge: Heuristic,
-    n_rounds: int = 100,
     filename: str = "Battles.png",
     labels: list[str] = (),
 ):
-    trials, lock = dict(), Lock()
-
     # No need to compute X vs Y and Y vs X
+    trials, lock = dict(), Lock()
+    battle_pairs = list(combinations_with_replacement(players, 2))
+
     threads = [
-        Thread(target=trial, args=(p1, p2, judge, n_rounds, trials, lock))
-        for p1, p2 in combinations_with_replacement(players, 2)
+        Thread(target=trial, args=(p1, p2, judge, START_BOARD, len(battle_pairs), trials, lock))
+        for p1, p2 in battle_pairs
     ]
     for t in threads:
         t.start()
     for t in threads:
         t.join()
-
-    trials.update({(p2, p1): n_rounds - trials[(p1, p2)] for p1, p2 in trials if p1 != p2})
 
     results = [[trials[(str(p1), str(p2))] for p2 in players] for p1 in players]
 
@@ -161,8 +158,10 @@ def plot_battle(
         "my_gradient", [(0, "red"), (0.5, "white"), (1, "green")]
     )
     ax.matshow(results, cmap=cmap)
+    n_rounds = START_BOARD.width
+
     ax.set(
-        title=f"Results of {n_rounds} rounds",
+        title=f"Results of {n_rounds} rounds per combination",
         xticks=np.arange(len(players)),
         yticks=np.arange(len(players)),
         xticklabels=labels or players,
@@ -186,11 +185,12 @@ def plot_battle(
 # plot_battle([minimax, abprune, montecarlo], SimpleHeuristic(GAME_N), 10)
 mc_players = []
 mc_labels = []
-for c in [0.01, 0.5, 1, 1.5, 2]:
+# for c in [0.01, 0.5, 1, 1.5, 2]:
+for c in [1.35, 1.425, 1.5, 1.575, 1.65]:
     p = deepcopy(montecarlo)
     p.selection_strat = upper_conf_bound(c)
-    p.n_iterations = 800
+    p.n_iterations = 200
     mc_players.append(p)
     mc_labels.append(f"MCTS (c={c})")
 
-plot_battle(mc_players, SimpleHeuristic(GAME_N), 20, "MC-battles.png", mc_labels)
+plot_battle(mc_players, SimpleHeuristic(GAME_N), "MC-battles-narrow-200.png", mc_labels)
