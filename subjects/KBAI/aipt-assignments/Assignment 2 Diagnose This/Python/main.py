@@ -1,11 +1,11 @@
-from circuitplotter import plot_circuit
-from guesscomponentsgame import choose_components, score_function
-from conflictsets import ConflictSetRetriever
-from hittingsets import run_hitting_set_algorithm
 from os.path import join
 
-if __name__ == '__main__':
+from circuitplotter import plot_circuit
+from conflictsets import ConflictSetRetriever
+from guesscomponentsgame import choose_components, score_function
+from hittingsets import run_hitting_set_algorithm
 
+if __name__ == "__main__":
     document = "circuit1.txt"
 
     game = False
@@ -16,7 +16,9 @@ if __name__ == '__main__':
         plot_circuit(document)
         chosen_conflict_sets = choose_components()
         print("Your chosen conflict sets:", chosen_conflict_sets)
-        chosen_hitting_sets, chosen_minimal_hitting_sets = run_hitting_set_algorithm(chosen_conflict_sets)
+        chosen_hitting_sets, chosen_minimal_hitting_sets = run_hitting_set_algorithm(
+            chosen_conflict_sets
+        )
         print("Your hitting sets:", chosen_hitting_sets)
         print("Your minimal hitting sets:", chosen_minimal_hitting_sets, "\n")
 
@@ -37,3 +39,4 @@ if __name__ == '__main__':
     if game:
         score = score_function(conflict_sets, chosen_conflict_sets)
         print(f"Your score: {score:.2f}%")
+

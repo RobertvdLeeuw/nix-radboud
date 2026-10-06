@@ -5,10 +5,10 @@ $$\frac{\partial^2f}{\partial x \partial y} = \frac{\partial^2f}{\partial y \par
 
 Inference
 
-| Product  | $[uv]' = u'v+uv'$                      | $\frac{d}{dx}uv = \frac{du}{dx}v+u\frac{dv}{dx}$            |
-| -------- | -------------------------------------- | ----------------------------------------------------------- |
-| Quotient | $[\frac{u}{v}]' = \frac{u'v-uv'}{v^2}$ | $\frac{du}{dx} = \frac{\frac{du}{dx}v-u\frac{dv}{dx}}{v^2}$ |
-| Chain    | $[u(v)]' = u'(v)v'$                    | $\frac{du}{dx} = \frac{du(v)}{dv} \cdot \frac{dv}{dx}$      |
+| Product/Parts      | $[uv]' = u'v+uv'$                      | $\int u \space dv = uv - \int v \space du$ |
+| ------------------ | -------------------------------------- | ------------------------------------------ |
+| Quotient           | $[\frac{u}{v}]' = \frac{u'v-uv'}{v^2}$ |                                            |
+| Chain/Substitution | $[u(v)]' = u'(v)v'$                    | $\int u'(v)v' = u(v)+C$                    |
 
 Common derivatives
 

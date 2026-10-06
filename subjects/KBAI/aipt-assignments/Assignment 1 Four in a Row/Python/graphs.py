@@ -29,16 +29,18 @@ START_BOARD = Board(6, 7)
 minimax = MinMaxPlayer(
     1,
     GAME_N,
-    4,
+    5,
     SimpleHeuristic(GAME_N),
 )
 abprune = AlphaBetaPlayer(
-    2,
+    1,
     GAME_N,
-    4,
+    6,
     SimpleHeuristic(GAME_N),
 )
-montecarlo = MCController(1, GAME_N, SimpleHeuristic(GAME_N), upper_conf_bound(1), n_iterations=200)
+montecarlo = MCController(
+    1, GAME_N, SimpleHeuristic(GAME_N), upper_conf_bound(1.575), n_iterations=200
+)
 COLORS = ["orange", "blue", "green", "purple", "red", "yellow"]
 
 
@@ -124,10 +126,6 @@ def plot_MC_iteration_scaling(Ns: list[int]):
     plt.savefig("MC-Scaling.png")
 
 
-# plot_eval_depth_scaling([minimax, abprume], range(1, 8))
-# plot_MC_iteration_scaling([50, 75, 100, 200, 300, 500, 750, 1000])
-
-
 from itertools import combinations_with_replacement, product
 
 
@@ -183,14 +181,23 @@ def plot_battle(
 
 
 # plot_battle([minimax, abprune, montecarlo], SimpleHeuristic(GAME_N), 10)
-mc_players = []
-mc_labels = []
-# for c in [0.01, 0.5, 1, 1.5, 2]:
-for c in [1.35, 1.425, 1.5, 1.575, 1.65]:
-    p = deepcopy(montecarlo)
-    p.selection_strat = upper_conf_bound(c)
-    p.n_iterations = 200
-    mc_players.append(p)
-    mc_labels.append(f"MCTS (c={c})")
+# mc_players = []
+# mc_labels = []
+# # for c in [0.01, 0.5, 1, 1.5, 2]:
+# for c in [1.35, 1.425, 1.5, 1.575, 1.65]:
+#     p = deepcopy(montecarlo)
+#     p.selection_strat = upper_conf_bound(c)
+#     p.n_iterations = 200
+#     mc_players.append(p)
+#     mc_labels.append(f"MCTS (c={c})")
 
-plot_battle(mc_players, SimpleHeuristic(GAME_N), "MC-battles-narrow-200.png", mc_labels)
+# plot_battle(mc_players, SimpleHeuristic(GAME_N), "MC-battles-narrow-200.png", mc_labels)
+
+plot_eval_depth_scaling([minimax, abprune], range(1, 8))
+plot_battle(
+    [minimax, abprune, montecarlo],
+    SimpleHeuristic(GAME_N),
+    "end-battles.png",
+    ["Minimax", "AB Prune", "MCTS"],
+)
+plot_MC_iteration_scaling([50, 75, 100, 200, 300, 500, 750, 1000])

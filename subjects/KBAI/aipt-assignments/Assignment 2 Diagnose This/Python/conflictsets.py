@@ -1,13 +1,15 @@
-from z3 import *
-from itertools import chain, combinations
-from typing import Tuple, List, Callable
 import re
+from itertools import chain, combinations
+from typing import Callable, List, Tuple
+
+from z3 import *
 
 
 class ConflictSetRetriever:
     """
     Class that handles reads in a file and finds the conflict sets.
     """
+
     def __init__(self, document_path):
         """
         Opens file and handles logic to read the system description
@@ -24,7 +26,6 @@ class ConflictSetRetriever:
         self.fault_assumptions = self.make_fault_assumptions()
         self.observations = self.extract_observations()
 
-
     def open_document(self) -> str:
         """
         Opens document and returns as a string
@@ -34,7 +35,6 @@ class ConflictSetRetriever:
         with open(self.document_path, "r") as file:
             return file.read()
 
-
     def validate_file(self):
         """
         Checks if the circuit file has a correct format, throws error if not.
@@ -43,15 +43,21 @@ class ConflictSetRetriever:
         if not comp_section:
             raise Exception("Missing COMPONENTS section")
 
-        behaviour_section = re.search(r"BEHAVIOUR:\s*(.*?)\s*ENDBEHAVIOUR", self.document, re.DOTALL)
+        behaviour_section = re.search(
+            r"BEHAVIOUR:\s*(.*?)\s*ENDBEHAVIOUR", self.document, re.DOTALL
+        )
         if not behaviour_section:
             raise Exception("Missing BEHAVIOUR section")
 
-        observation_section = re.search(r"OBSERVATIONS:\s*(.*?)\s*ENDOBSERVATIONS", self.document, re.DOTALL)
+        observation_section = re.search(
+            r"OBSERVATIONS:\s*(.*?)\s*ENDOBSERVATIONS", self.document, re.DOTALL
+        )
         if not observation_section:
             raise Exception("Missing OBSERVATION section")
 
-        out_observation_section = re.search(r"OUTOBSERVATIONS:\s*(.*?)\s*ENDOUTOBSERVATIONS", self.document, re.DOTALL)
+        out_observation_section = re.search(
+            r"OUTOBSERVATIONS:\s*(.*?)\s*ENDOUTOBSERVATIONS", self.document, re.DOTALL
+        )
         if not out_observation_section:
             raise Exception("Missing OUTOBSERVATION section")
 
@@ -62,20 +68,22 @@ class ConflictSetRetriever:
 
         for comp in components:
             in_counts[comp]["IN1"] = len(
-                re.findall(rf"\bIN1\({re.escape(comp)}\)\s*=", self.document))
+                re.findall(rf"\bIN1\({re.escape(comp)}\)\s*=", self.document)
+            )
             in_counts[comp]["IN2"] = len(
-                re.findall(rf"\bIN2\({re.escape(comp)}\)\s*=", self.document))
+                re.findall(rf"\bIN2\({re.escape(comp)}\)\s*=", self.document)
+            )
 
         errors = []
         for comp, counts in in_counts.items():
             if counts["IN1"] != 1 or counts["IN2"] != 1:
                 errors.append(
                     f"- component {comp} has {counts['IN1']} IN1 connections and "
-                    f"{counts['IN2']} IN2 connections.")
+                    f"{counts['IN2']} IN2 connections."
+                )
 
         if errors:
             raise ValueError("Invalid component connections:\n" + "\n".join(errors))
-
 
     def extract_in_observations(self) -> List[z3.z3.BoolRef]:
         """
@@ -97,7 +105,6 @@ class ConflictSetRetriever:
                 obs_names.append(Bools(obs_name)[0])  # only store e.g. IN1(X1)
             return obs_names
 
-
     def extract_out_observations(self) -> List[z3.z3.BoolRef]:
         """
         Reads in the out-observations and stores them as list of Z3 Bools.
@@ -116,9 +123,8 @@ class ConflictSetRetriever:
             for observation in observations:
                 obs_name = observation.split("=")[0]
                 obs_names.append(Bools(obs_name)[0])  # only store e.g. OUT(X2)
-                
-            return obs_names
 
+            return obs_names
 
     def extract_gates(self) -> Tuple[List[z3.z3.BoolRef], List[z3.z3.BoolRef]]:
         """
@@ -145,9 +151,8 @@ class ConflictSetRetriever:
                 else:
                     comp_names.append(Bools(comp_name.group(1) + "_gate")[0])
                     comp_out_names.append(Bools(comp_name.group(1))[0])
-            
-            return comp_names, comp_out_names  # e.g. X1, X1_gate
 
+            return comp_names, comp_out_names  # e.g. X1, X1_gate
 
     @staticmethod
     def faulted(gate_out, logic_expr, fault_flag) -> z3.z3.BoolRef:
@@ -161,7 +166,6 @@ class ConflictSetRetriever:
         :return: Or: faulty behaviour
         """
         return Or(fault_flag, gate_out == logic_expr)
-
 
     def find_corresponding_gate_type(self, comp_out) -> Callable:
         """
@@ -191,7 +195,6 @@ class ConflictSetRetriever:
                             return Or
                         elif gate == "XORG":
                             return Xor
-
 
     def find_inputs(self, comp_out) -> Tuple[Tuple[int, bool], Tuple[int, bool]]:
         """
@@ -229,7 +232,6 @@ class ConflictSetRetriever:
                 obs_b = False
 
             return (in_a, obs_a), (in_b, obs_b)
-        
 
     def make_fault_assumptions(self) -> List[z3.z3.BoolRef]:
         """
@@ -262,7 +264,6 @@ class ConflictSetRetriever:
             fault_assumptions.append(self.faulted(comp, gate(input_a, input_b), comp_out))
 
         return fault_assumptions
-
 
     def extract_observations(self) -> List[z3.z3.BoolRef]:
         """
@@ -301,7 +302,6 @@ class ConflictSetRetriever:
                         all_observations.append(self.comps[j] == value)
         return all_observations
 
-
     @staticmethod
     def powerset(s) -> chain[Tuple[z3.z3.BoolRef]]:
         """
@@ -312,7 +312,6 @@ class ConflictSetRetriever:
         :return: powerset of s
         """
         return chain.from_iterable(combinations(s, r) for r in range(1, len(s) + 1))
-
 
     def retrieve_conflict_sets(self) -> List[List[str]]:
         """

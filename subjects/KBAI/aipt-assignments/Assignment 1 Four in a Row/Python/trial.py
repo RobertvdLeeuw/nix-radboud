@@ -118,4 +118,5 @@ def trial(
     return p1_wins
 
 
-# trial(minimax_1, minimax_2, SimpleHeuristic(GAME_N))
+if __name__ == "__main__":
+    trial(minimax_1, minimax_2, SimpleHeuristic(GAME_N))

@@ -5,10 +5,12 @@ def choose_components():
     """
     UI loop for letting the user choose their own components.
     """
-    print("Choose your conflict sets.\n"
-          "Separate components within a conflict set by using a space.\n"
-          "Make separate conflict sets by hitting the enter key.\n"
-          "Once you are done, type \"STOP\"")
+    print(
+        "Choose your conflict sets.\n"
+        "Separate components within a conflict set by using a space.\n"
+        "Make separate conflict sets by hitting the enter key.\n"
+        'Once you are done, type "STOP"'
+    )
     chosen_conflict_sets = []
     prompt = ""
     while prompt != "STOP":
@@ -75,4 +77,3 @@ def score_function(hitting_sets, chosen_hitting_sets):
     final_score = max(0, final_score)  # ensure score doesn't go below 0
 
     return final_score * 100
-
