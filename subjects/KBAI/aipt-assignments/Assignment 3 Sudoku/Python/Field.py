@@ -34,6 +34,7 @@ class Field:
 
     def set_value(self, value):
         self.value = value
+        self.domain = []  # Added for consistency
 
     # endregion
 

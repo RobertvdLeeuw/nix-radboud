@@ -2,7 +2,6 @@ from Field import Field
 
 
 class Sudoku:
-
     def __init__(self, filename):
         self.board = self.read_sudoku(filename)
 
@@ -37,7 +36,7 @@ class Sudoku:
             with open(filename, "r") as file:
                 for row, line in enumerate(file):
                     for col_index, char in enumerate(line):
-                        if char == '\n':
+                        if char == "\n":
                             continue
                         if int(char) == 0:
                             grid[row][col_index] = Field()
