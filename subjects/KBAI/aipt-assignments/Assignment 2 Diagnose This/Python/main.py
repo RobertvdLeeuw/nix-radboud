@@ -39,4 +39,3 @@ if __name__ == "__main__":
     if game:
         score = score_function(conflict_sets, chosen_conflict_sets)
         print(f"Your score: {score:.2f}%")
-

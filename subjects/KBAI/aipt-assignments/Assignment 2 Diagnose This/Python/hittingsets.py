@@ -3,13 +3,16 @@ from functools import reduce
 from itertools import combinations
 
 
-def run_hitting_set_algorithm(conflict_sets):
+def run_hitting_set_algorithm(conflict_sets, all_means_all: bool = True):
     """
     Algorithm that handles the entire process from conflict sets to hitting sets
 
     :param conflict_sets: list of conflict sets as list
     :return: the hitting sets and minimal hitting sets as list of lists
     """
+
+    # MRV
+    conflict_sets = sorted(conflict_sets, key=len)
 
     def berge(min_hits: set[frozenset], c_set: frozenset) -> set[frozenset]:
         print("Going in:", [list(hs) for hs in min_hits], ", conflict:", list(c_set))
@@ -41,7 +44,7 @@ def run_hitting_set_algorithm(conflict_sets):
     return hitting_sets, min_hitting_sets
 
 
-a, b = run_hitting_set_algorithm([[1, 2, 3], [3, 4, 9], [1, 5, 8]])
+a, b = run_hitting_set_algorithm([[1, 2, 3], [3, 4, 5]])
 print("END\n")
 print(a)
 print(b)
