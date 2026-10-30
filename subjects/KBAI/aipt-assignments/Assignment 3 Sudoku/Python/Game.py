@@ -10,22 +10,9 @@ def transpose(data: list[list]) -> list[list]:
     return list(zip(*data))
 
 
-def flatten(data):
-    if not all(hasattr(x, "__iter__") for x in data):
-        return data
-
-    return [y for x in data for y in x]
-
-
 def construct_arcs(s: Sudoku) -> set[tuple]:
     arcs = {(a, "neq", b) for row in s.board for a, b in combinations(row, 2)}  # Rows
     arcs |= {(a, "neq", b) for col in zip(*s.board) for a, b in combinations(col, 2)}  # Cols
-
-    for row_group in (s.board[0:3],):
-        for group in (transpose(row_group)[0:3],):
-            for a, b in combinations(flatten(group), 2):
-                assert isinstance(a, Field), f"A WRONG: {a}"
-                assert isinstance(b, Field), f"B WRONG: {b}"
 
     arcs |= {
         (a, "neq", b)
@@ -35,7 +22,7 @@ def construct_arcs(s: Sudoku) -> set[tuple]:
             transpose(row_group)[3:6],
             transpose(row_group)[6:9],
         )
-        for a, b in combinations(flatten(group), 2)
+        for a, b in combinations([field for col in group for field in col], 2)
     }  # 3x3's
 
     # Mirror versions

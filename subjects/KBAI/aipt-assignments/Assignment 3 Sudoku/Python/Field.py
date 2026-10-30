@@ -72,6 +72,9 @@ class Field:
         :param value: value to remove
         :return: true if the value was removed
         """
+        assert len(self.domain) > 0, "Attempting to remove from empty domain"
+        assert value in self.domain, f"Attemping to remove value that isn't in domain ({value})"
+
         value_removed = self.domain.remove(value)
         if len(self.domain) == 1:
             self.set_value(self.domain[0])
