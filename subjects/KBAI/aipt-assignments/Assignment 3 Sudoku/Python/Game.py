@@ -1,3 +1,4 @@
+from copy import deepcopy
 from itertools import combinations
 
 from Field import Field
@@ -86,5 +87,34 @@ class Game:
         Checks the validity of a sudoku solution
         @return: true if the sudoku solution is correct
         """
-        # TODO: implement valid_solution function
-        return False
+
+        for row_idx, row in enumerate(self.sudoku.board):
+            for col_idx, field in enumerate(row):
+                if field.value == 0:
+                    print(f"({row_idx}, {col_idx}) not filled in")
+                    return False
+
+        for row_idx, row in enumerate(self.sudoku.board):
+            for a, b in combinations(range(len(row)), 2):
+                if row[a].value == row[b].value:
+                    print(f"Row {row_idx}: fields {a} and {b} share value {row[a].value}")
+                    return False
+
+        for col_idx, col in enumerate(transpose(self.sudoku.board)):
+            for a, b in combinations(range(len(col)), 2):
+                if col[a].value == col[b].value:
+                    print(f"Col {col_idx}: fields {a} and {b} share value {col[a].value}")
+                    return False
+
+        # for row_group in (self.board[0:3], self.board[3:6], self.board[6:9]):
+        #     for group in (
+        #         transpose(row_group)[0:3],
+        #         transpose(row_group)[3:6],
+        #         transpose(row_group)[6:9],
+        #     ):
+        #         for a, b in combinations([field for col in group for field in col], 2):
+        #             if col[a].value == col[b].value:
+        #                 print(f"Region {col_idx}: fields {a} and {b} share value {col[a].value}")
+        #                 return False
+
+        return True
