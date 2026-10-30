@@ -1,24 +1,42 @@
 from itertools import combinations
 
 from Field import Field
+from Sudoku import Sudoku
 
 CONDITIONS = {"eq": lambda b: lambda a: a == b.value, "neq": lambda b: lambda a: a != b.value}
 
 
+def transpose(data: list[list]) -> list[list]:
+    return list(zip(*data))
+
+
+def flatten(data):
+    if not all(hasattr(x, "__iter__") for x in data):
+        return data
+
+    return [y for x in data for y in x]
+
+
 def construct_arcs(s: Sudoku) -> set[tuple]:
-    arcs = {
-        # Rows
-        *[(a, "neq", b) for _, row in s.board for a, b in combinations(row, 2)],
-        # Cols
-        *[(a, "neq", b) for _, col in zip(*s.board) for a, b in combinations(col, 2)],
-        # 3x3's
-        *[
-            (a, "neq", b)
-            for _, row_group in (s.board[0:3], s.board[3:6], s.board[6:9])
-            for _, group in (row_group[0:3], row_group[3:6], row_group[6:9])
-            for a, b in combinations(group, 2)
-        ],
-    }
+    arcs = {(a, "neq", b) for row in s.board for a, b in combinations(row, 2)}  # Rows
+    arcs |= {(a, "neq", b) for col in zip(*s.board) for a, b in combinations(col, 2)}  # Cols
+
+    for row_group in (s.board[0:3],):
+        for group in (transpose(row_group)[0:3],):
+            for a, b in combinations(flatten(group), 2):
+                assert isinstance(a, Field), f"A WRONG: {a}"
+                assert isinstance(b, Field), f"B WRONG: {b}"
+
+    arcs |= {
+        (a, "neq", b)
+        for row_group in (s.board[0:3], s.board[3:6], s.board[6:9])
+        for group in (
+            transpose(row_group)[0:3],
+            transpose(row_group)[3:6],
+            transpose(row_group)[6:9],
+        )
+        for a, b in combinations(flatten(group), 2)
+    }  # 3x3's
 
     # Mirror versions
     arcs |= {(b, cond, a) for (a, cond, b) in arcs}
@@ -26,10 +44,21 @@ def construct_arcs(s: Sudoku) -> set[tuple]:
     arcs |= {
         # Already given (no need to mirror)
         (field, "eq", field.value)
-        for _, row in s.board
-        for _, field in row
+        for row in s.board
+        for field in row
         if field.value != 0
     }
+
+    for a, cond, b in arcs:
+        assert isinstance(a, Field), (
+            f"Misformed arc: a is of type {type(a)}, a={a}, domain={getattr(a, 'domain', None)}"
+        )
+
+        assert cond in CONDITIONS, f"Misformed arc: invalid condition '{cond}'"
+
+        assert isinstance(b, Field) or isinstance(b, int), (
+            f"Misformed arc: b is of type {type(b)}, b={b}, domain={getattr(b, 'domain', None)}"
+        )
 
     return arcs
 

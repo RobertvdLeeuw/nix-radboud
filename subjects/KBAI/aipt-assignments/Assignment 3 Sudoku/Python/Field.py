@@ -88,4 +88,7 @@ class Field:
         """
         return "." if self.value == 0 else str(self.value)
 
+    def __repr__(self):
+        return f"Field(domain={self.domain})" if self.domain else f"Field(val={self.value})"
+
     # endregion
