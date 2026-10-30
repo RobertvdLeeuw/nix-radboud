@@ -14,10 +14,10 @@ $$\text{Marginalization: } P(B) = \sum_i^n P(B|A_i) \text{ where A is partition 
 ### Bayes' rule:
 $$P(A|B)=\frac{P(B|A)P(A)}{P(B)} \text{, } P(A|B)P(B)=P(A, B)=P(B|A)P(A)$$
 $$\text{Using partitions: } P(B) = \sum_{i=1}^n P(B | A_i) P (A_i) , \space P(A_k | B) = \frac{P(B|A_k)P(A_k)}{\sum_{i=1}^n P(B|A_i)P(A_i)}$$
-$$\text{With more conditionals:} P(A|B,C)=\frac{P(B|A, C)P(A | C)}{P(B | C)}, \space P(B|C) = \sum_{i=1}^n P(B | A_i,C) P (A_i|C)$$
+$$\text{With more conditionals:} P(A|B,C)=\frac{P(B|A, C)P(A | C)}{P(B | C)}=\frac{P(B | A) P(C | A) P(A)}{P(B,C)} \text{ (if disjoint A and B?)}$$
 How to Apply Bayes’ Rule
 1. Modeling step 1: Identify the events A1, . . . , An, their probabilities P (Ai) and ensure that they form a partition (all $A_i$ mutually disjoint and $\sum_{i=1}^{n}P(A_i)=1$) 
-2. Modeling step 2: Identify $P(B | A_i)$ for each $A_i$
+2. Modeling step 2: Identify $P(B | A_i)$ for each $A_i1
 3. Use Bayes’ rule: to compute $P(A_i | B)$
 
 $$P(A|B)=P(A) \text{ (independent) } \not \leftrightarrow P(A|B,C)=P(A|C)  \text{ (conditionally independent) } $$
