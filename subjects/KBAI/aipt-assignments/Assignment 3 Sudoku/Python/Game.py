@@ -13,12 +13,13 @@ def transpose(data: list[list]) -> list[list]:
 
 def construct_arcs(s: Sudoku) -> set[tuple]:
     arcs = {(a, "neq", b) for row in s.board for a, b in combinations(row, 2)}  # Rows
-    arcs |= {(a, "neq", b) for col in zip(*s.board) for a, b in combinations(col, 2)}  # Cols
-
-    arcs |= {(a, "neq", b) for row in s.board for a in row for b in a.get_neighbours()}  # 3x3's
+    arcs |= {(a, "neq", b) for col in transpose(s.board) for a, b in combinations(col, 2)}  # Cols
 
     # Mirror versions
     arcs |= {(b, cond, a) for (a, cond, b) in arcs}
+
+    # 3x3's (No need to mirror since we're looping over every field)
+    arcs |= {(a, "neq", b) for row in s.board for a in row for b in a.get_neighbours()}
 
     arcs |= {
         # Already given (no need to mirror)
@@ -42,6 +43,111 @@ def construct_arcs(s: Sudoku) -> set[tuple]:
     return arcs
 
 
+import random
+
+
+def pick_field(board: list[list[Field]]) -> tuple[Field, int, int]:
+    flattened = [field for row in board for field in row]
+
+    filtered = [field for field in flattened if field.value == 0]
+
+    return filtered[0], 0, 0
+    # return random.choice(filtered)
+
+
+def pick_value(field: Field) -> int:
+    return field.domain[0]
+    # return random.choice(field.domain)
+
+
+def ac3_constrain(sudoku, print_reason=True) -> bool:
+    """
+    Implementation of the AC-3 algorithm
+    @return: true if the constraints can be satisfied, false otherwise
+    """
+    arcs = construct_arcs(sudoku)
+    agenda = set(arcs)
+
+    while agenda:
+        a, cond, b = agenda.pop()
+
+        # Dummy fields around ints so we only need 1 processing func
+        b_parsed = Field(b) if isinstance(b, int) else b
+
+        a_conditioned = list(filter(CONDITIONS[cond](b_parsed), a.domain))
+
+        # No valid values for a (empty domain ergo no solution)
+        if not a_conditioned:
+            if print_reason:
+                print(f"Empty domain, {repr(a)} -({cond} {b})-> {a_conditioned}")
+            return False
+
+        if diff := [val for val in a.domain if val not in a_conditioned]:
+            for val in diff:
+                a.remove_from_domain(val)
+
+            agenda |= {(left, cond, right) for (left, cond, right) in arcs if a == right}
+
+    if print_reason:
+        print("Arc consistent")
+
+    return True
+
+
+def search_space(sudoku, print_reason=False) -> Sudoku | None:
+    """
+    Returns a valid final solution if it exists within the outcome space. Returns None otherwise.
+    """
+
+    sudoku = deepcopy(sudoku)
+
+    if sudoku.filled():
+        # Already completely filled in
+        return sudoku
+
+    field, row_idx, col_idx = pick_field(sudoku.board)
+
+    print("Picked", repr(field))
+
+    while True:
+        value = pick_value(field)
+        print(f"\tPicked value {field.domain} -> {value}")
+
+        filled_with_value = deepcopy(sudoku)
+        filled_field = filled_with_value.board[row_idx][col_idx]
+
+        filled_field.value = value
+        filled_field.domain = [value]
+
+        if not ac3_constrain(filled_with_value):
+            print("\t\tInvalid, repick")
+
+            # Direct remove since last val here doesn't guarantee correctness
+            field.domain.remove(value)
+
+            # No for all domain values: No valid solution
+            if not field.domain:
+                print("\t\tNo valid values for field, backtracking")
+                return None
+
+            continue
+        print(f"\t{value} is valid, next field")
+
+        # If assigning this value to this field leads to a valid solution, break and return
+        if s := search_space(filled_with_value):
+            sudoku = s
+            break
+
+        # Otherwise, try other values until all run out
+
+    print(sudoku)
+
+    if not sudoku.filled():
+        print("Search space sudoku not completely filled")
+
+    return sudoku
+
+
 class Game:
     def __init__(self, sudoku):
         self.sudoku = sudoku
@@ -61,62 +167,69 @@ class Game:
         print(self.sudoku)
 
     def solve(self) -> bool:
-        """
-        Implementation of the AC-3 algorithm
-        @return: true if the constraints can be satisfied, false otherwise
-        """
-        arcs = construct_arcs(self.sudoku)
-        agenda = set(arcs)
+        if not ac3_constrain(self.sudoku, print_reason=True):
+            print("AC-3 couldn't find consistent solution, no solutions possible")
+            return False
 
-        while agenda:
-            a, cond, b = agenda.pop()
+        if self.sudoku.filled():
+            print("AC-3 led to final solution, no space search needed")
+            return True
 
-            # Dummy fields around ints so we only need 1 processing func
-            b_parsed = Field(b) if isinstance(b, int) else b
+        print(self.sudoku)
 
-            a_conditioned = list(filter(CONDITIONS[cond](b_parsed), a.domain))
+        print("Starting space search")
+        solution = search_space(self.sudoku, print_reason=True)
 
-            if diff := [val for val in a.domain if val not in a_conditioned]:
-                for val in diff:
-                    a.remove_from_domain(val)
+        if not solution:
+            print("Space search couldn't find solution")
+            return False
 
-                agenda |= {(left, cond, right) for (left, cond, right) in arcs if a == right}
-
+        print("Space search led to solution")
         return True
 
-    def valid_solution(self) -> bool:
+    def valid_solution(self, print_reason=False) -> bool:
         """
         Checks the validity of a sudoku solution
         @return: true if the sudoku solution is correct
         """
 
-        print(self.sudoku)
+        if print_reason:
+            print(self.sudoku)
 
-        for row_idx, row in enumerate(self.sudoku.board):
-            for col_idx, field in enumerate(row):
-                if field.value == 0:
-                    print(f"({row_idx}, {col_idx}) not filled in")
-                    return False
+        if not self.sudoku.filled(print_reason):
+            return False
 
         for row_idx, row in enumerate(self.sudoku.board):
             for a, b in combinations(range(len(row)), 2):
-                if row[a].value == row[b].value:
-                    print(f"Row {row_idx}: fields {a} and {b} share value {row[a].value}")
-                    return False
+                if row[a].value != row[b].value:
+                    continue
+
+                if print_reason:
+                    print(f"Row {row_idx + 1}: fields {a} and {b} share value {row[a].value}")
+
+                return False
 
         for col_idx, col in enumerate(transpose(self.sudoku.board)):
             for a, b in combinations(range(len(col)), 2):
-                if col[a].value == col[b].value:
-                    print(f"Col {col_idx}: fields {a} and {b} share value {col[a].value}")
-                    return False
+                if col[a].value != col[b].value:
+                    continue
+
+                if print_reason:
+                    print(f"Col {col_idx + 1}: fields {a} and {b} share value {col[a].value}")
+
+                return False
 
         for row_idx, row in enumerate(self.sudoku.board):
             for col_idx, a in enumerate(row):
                 for b in a.get_neighbours():
-                    if a.value == b.value:
+                    if a.value != b.value:
+                        continue
+
+                    if print_reason:
                         print(
-                            f"Value at ({row_idx}, {col_idx}) shares value {a.value} with other cell in 3x3 region"
+                            f"Value at ({row_idx + 1}, {col_idx + 1}) shares value {a.value} with other cell in 3x3 region"
                         )
-                        return False
+
+                    return False
 
         return True

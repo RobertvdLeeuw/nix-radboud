@@ -16,7 +16,7 @@ class Field:
         # Constructor in case the field is known, i.e., it contains a value
         if len(args) == 1:
             self.value = args[0]
-            self.domain = []
+            self.domain = [self.value]
 
     # endregion
 

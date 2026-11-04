@@ -69,3 +69,15 @@ class Sudoku:
 
     def get_board(self):
         return self.board
+
+    def filled(self, print_reason=False) -> bool:
+        for row_idx, row in enumerate(self.board):
+            for col_idx, field in enumerate(row):
+                if field.value != 0:
+                    continue
+
+                if print_reason:
+                    print(f"({row_idx}, {col_idx}) not filled in")
+
+                return False
+        return True
