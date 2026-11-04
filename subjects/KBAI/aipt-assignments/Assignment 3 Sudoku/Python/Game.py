@@ -47,11 +47,11 @@ import random
 
 
 def pick_field(board: list[list[Field]]) -> tuple[Field, int, int]:
-    flattened = [field for row in board for field in row]
+    for r, row in enumerate(board):
+        for c, field in enumerate(row):
+            if field.value == 0:
+                return field, r, c
 
-    filtered = [field for field in flattened if field.value == 0]
-
-    return filtered[0], 0, 0
     # return random.choice(filtered)
 
 
@@ -60,7 +60,7 @@ def pick_value(field: Field) -> int:
     # return random.choice(field.domain)
 
 
-def ac3_constrain(sudoku, print_reason=True) -> bool:
+def ac3_constrain(sudoku, print_reason=False) -> bool:
     """
     Implementation of the AC-3 algorithm
     @return: true if the constraints can be satisfied, false otherwise
@@ -94,7 +94,7 @@ def ac3_constrain(sudoku, print_reason=True) -> bool:
     return True
 
 
-def search_space(sudoku, print_reason=False) -> Sudoku | None:
+def backtrack(sudoku, print_reason=False) -> Sudoku | None:
     """
     Returns a valid final solution if it exists within the outcome space. Returns None otherwise.
     """
@@ -107,43 +107,39 @@ def search_space(sudoku, print_reason=False) -> Sudoku | None:
 
     field, row_idx, col_idx = pick_field(sudoku.board)
 
-    print("Picked", repr(field))
-
+    # TODO: Maybe for value in sort_by_metrics(field.domain)
     while True:
         value = pick_value(field)
-        print(f"\tPicked value {field.domain} -> {value}")
 
-        filled_with_value = deepcopy(sudoku)
-        filled_field = filled_with_value.board[row_idx][col_idx]
+        attempt = deepcopy(sudoku)
+        attempt_field = attempt.board[row_idx][col_idx]
 
-        filled_field.value = value
-        filled_field.domain = [value]
+        attempt_field.value = value
+        attempt_field.domain = [value]
 
-        if not ac3_constrain(filled_with_value):
-            print("\t\tInvalid, repick")
-
+        if not ac3_constrain(attempt):
             # Direct remove since last val here doesn't guarantee correctness
             field.domain.remove(value)
 
             # No for all domain values: No valid solution
             if not field.domain:
-                print("\t\tNo valid values for field, backtracking")
                 return None
 
             continue
-        print(f"\t{value} is valid, next field")
 
         # If assigning this value to this field leads to a valid solution, break and return
-        if s := search_space(filled_with_value):
+        if s := backtrack(attempt):
             sudoku = s
             break
 
+        field.domain.remove(value)
+
+        if not field.domain:
+            return None
+
         # Otherwise, try other values until all run out
 
-    print(sudoku)
-
-    if not sudoku.filled():
-        print("Search space sudoku not completely filled")
+    assert sudoku.filled(), "Search space sudoku not completely filled"
 
     return sudoku
 
@@ -178,13 +174,14 @@ class Game:
         print(self.sudoku)
 
         print("Starting space search")
-        solution = search_space(self.sudoku, print_reason=True)
+        solution = backtrack(self.sudoku, print_reason=True)
 
         if not solution:
             print("Space search couldn't find solution")
             return False
 
         print("Space search led to solution")
+        self.sudoku = solution
         return True
 
     def valid_solution(self, print_reason=False) -> bool:
