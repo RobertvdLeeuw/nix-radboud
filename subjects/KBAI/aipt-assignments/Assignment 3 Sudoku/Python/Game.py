@@ -56,8 +56,7 @@ def pick_field(board: list[list[Field]]) -> tuple[Field, int, int]:
 
 
 def pick_value(field: Field) -> int:
-    return field.domain[0]
-    # return random.choice(field.domain)
+    return 1
 
 
 def ac3_constrain(sudoku, print_reason=False) -> bool:
@@ -86,7 +85,7 @@ def ac3_constrain(sudoku, print_reason=False) -> bool:
             for val in diff:
                 a.remove_from_domain(val)
 
-            agenda |= {(left, cond, right) for (left, cond, right) in arcs if a == right}
+            agenda |= {(left, cond, right) for (left, cond, right) in arcs if a is right}
 
     if print_reason:
         print("Arc consistent")
@@ -107,41 +106,23 @@ def backtrack(sudoku, print_reason=False) -> Sudoku | None:
 
     field, row_idx, col_idx = pick_field(sudoku.board)
 
-    # TODO: Maybe for value in sort_by_metrics(field.domain)
-    while True:
-        value = pick_value(field)
-
+    for value in sorted(field.domain, key=pick_value, reverse=False):
         attempt = deepcopy(sudoku)
+
         attempt_field = attempt.board[row_idx][col_idx]
 
         attempt_field.value = value
         attempt_field.domain = [value]
 
         if not ac3_constrain(attempt):
-            # Direct remove since last val here doesn't guarantee correctness
-            field.domain.remove(value)
-
-            # No for all domain values: No valid solution
-            if not field.domain:
-                return None
-
             continue
 
         # If assigning this value to this field leads to a valid solution, break and return
-        if s := backtrack(attempt):
-            sudoku = s
-            break
+        if result := backtrack(attempt):
+            return result
 
-        field.domain.remove(value)
-
-        if not field.domain:
-            return None
-
-        # Otherwise, try other values until all run out
-
-    assert sudoku.filled(), "Search space sudoku not completely filled"
-
-    return sudoku
+    # No values in domain were valid, ergo invalid solution
+    return None
 
 
 class Game:
