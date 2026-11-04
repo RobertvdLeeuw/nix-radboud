@@ -15,16 +15,7 @@ def construct_arcs(s: Sudoku) -> set[tuple]:
     arcs = {(a, "neq", b) for row in s.board for a, b in combinations(row, 2)}  # Rows
     arcs |= {(a, "neq", b) for col in zip(*s.board) for a, b in combinations(col, 2)}  # Cols
 
-    arcs |= {
-        (a, "neq", b)
-        for row_group in (s.board[0:3], s.board[3:6], s.board[6:9])
-        for group in (
-            transpose(row_group)[0:3],
-            transpose(row_group)[3:6],
-            transpose(row_group)[6:9],
-        )
-        for a, b in combinations([field for col in group for field in col], 2)
-    }  # 3x3's
+    arcs |= {(a, "neq", b) for row in s.board for a in row for b in a.get_neighbours()}  # 3x3's
 
     # Mirror versions
     arcs |= {(b, cond, a) for (a, cond, b) in arcs}
@@ -54,6 +45,17 @@ def construct_arcs(s: Sudoku) -> set[tuple]:
 class Game:
     def __init__(self, sudoku):
         self.sudoku = sudoku
+
+        # Set neighbours
+        for row_group in (sudoku.board[0:3], sudoku.board[3:6], sudoku.board[6:9]):
+            for group in (
+                transpose(row_group)[0:3],
+                transpose(row_group)[3:6],
+                transpose(row_group)[6:9],
+            ):
+                flattened = [field for col in group for field in col]
+                for i in range(9):
+                    flattened[i].set_neighbours(flattened[:i] + flattened[i + 1 :])
 
     def show_sudoku(self):
         print(self.sudoku)
@@ -88,6 +90,8 @@ class Game:
         @return: true if the sudoku solution is correct
         """
 
+        print(self.sudoku)
+
         for row_idx, row in enumerate(self.sudoku.board):
             for col_idx, field in enumerate(row):
                 if field.value == 0:
@@ -106,15 +110,13 @@ class Game:
                     print(f"Col {col_idx}: fields {a} and {b} share value {col[a].value}")
                     return False
 
-        # for row_group in (self.board[0:3], self.board[3:6], self.board[6:9]):
-        #     for group in (
-        #         transpose(row_group)[0:3],
-        #         transpose(row_group)[3:6],
-        #         transpose(row_group)[6:9],
-        #     ):
-        #         for a, b in combinations([field for col in group for field in col], 2):
-        #             if col[a].value == col[b].value:
-        #                 print(f"Region {col_idx}: fields {a} and {b} share value {col[a].value}")
-        #                 return False
+        for row_idx, row in enumerate(self.sudoku.board):
+            for col_idx, a in enumerate(row):
+                for b in a.get_neighbours():
+                    if a.value == b.value:
+                        print(
+                            f"Value at ({row_idx}, {col_idx}) shares value {a.value} with other cell in 3x3 region"
+                        )
+                        return False
 
         return True
