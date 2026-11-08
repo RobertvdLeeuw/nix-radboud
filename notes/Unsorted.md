@@ -42,3 +42,4 @@ $log(\frac 1 a) = log(a^{-1}) = -log(a), \space a>0$
 
 Max log likelyhood: $\mathcal{L}(\text{params};x_1 \dots x_n) = log(L(\text{params};x_1 \dots x_n)) = log(\prod_i^n P_{X_i} (x_i | \text{params})) = \sum^n log(P_{X_i} (x_i | \text{params}))$
 Find $\frac{\partial \mathcal{L}}{\partial \text{params}} = 0$
+

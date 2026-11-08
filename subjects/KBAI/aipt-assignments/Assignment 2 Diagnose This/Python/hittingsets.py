@@ -18,7 +18,7 @@ def run_hitting_set_algorithm(conflict_sets, all_means_all: bool = True):
         print("Going in:", [list(hs) for hs in min_hits], ", conflict:", list(c_set))
         min_hits = [
             [hs] if hs.intersection(c_set) else [frozenset([*hs, e]) for e in c_set]
-            for hs in min_hits or [{x} for x in c_set]
+            for hs in min_hits
         ]
 
         print("Updated:", [list(hit) for hits in min_hits for hit in hits])
@@ -35,7 +35,7 @@ def run_hitting_set_algorithm(conflict_sets, all_means_all: bool = True):
 
         return min_hits
 
-    hitting_sets = reduce(berge, {frozenset(s) for s in conflict_sets}, set())
+    hitting_sets = reduce(berge, {frozenset(s) for s in conflict_sets}, {frozenset()})
     hitting_sets = [list(hs) for hs in hitting_sets]
 
     min_k = min(map(len, hitting_sets))

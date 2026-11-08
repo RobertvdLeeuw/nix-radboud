@@ -123,8 +123,10 @@ $$
 ### Eigendecomposition
 $$A=DQD^{-1} \text{, where } A = \text{eigenvalues, D = diagonal matrix of A, Q = a matrix where each col is an eigenvector}$$
 Changing base vector to eigenvectors means every coordinate will be a diagonal matrix (which is much easier to work with) - called eigenbasis
-## M squared, M inv, etc`
 
+
+## Singular Value Decomposition
+$$A=U \Sigma V^T, \space U = \text{eigenvectors of } AA^T, \space \Sigma = \text{diag matrix of roots of eigenvalues of } A^TA \text{ or } AA^T, \space V = \text{eigenvectors of } A^TA$$
 ## Open Questions
 - Why is the determinant the product of all eigenvalues? Because it's the sum of scale n each independent axis = amount that area is scaled on transformation 
 	- Convert to eigenbasis -> lintrans mat is diagonal

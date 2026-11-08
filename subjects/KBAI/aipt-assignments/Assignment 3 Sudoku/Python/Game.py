@@ -34,7 +34,7 @@ def construct_arcs(s: Sudoku) -> set[tuple]:
     return arcs
 
 
-class Game:
+class Game: def __init__(self, sudoku):
     def __init__(self, sudoku):
         self.sudoku = sudoku
 
