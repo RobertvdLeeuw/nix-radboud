@@ -1,0 +1,17 @@
+
+| Operations             |                           |
+| ---------------------- | ------------------------- |
+| Exchange rows          | $E_i \leftrightarrow E_j$ |
+| Multiply by $c \neq 0$ | $E_i \coloneq cE_i$       |
+| Add $c \neq 0$         | $E_i \coloneq E_i + cE_j$ |
+
+Echelon form: every pivot (first non-zero element) in row has more leading zeroes than the last row
+System is inconsistent **iff** it contains a row with only zeroes before | and non-zero after (0x  = 7)
+System has 1 unique solution **iff** its echelon form contains as many pivots as variables
+Reduced echelon form: every pivot = 1 and is only non-zero in column
+## Gauss-elimination
+1. **Rows with trailing zeroes**: row exchange to reduce those
+2. Pick any row, make first element 1 by multiplying by constant
+3. Pick another row, add/subtract and/or multiply to make first element 0
+4. Make first non-zero element of that row 1
+5. Repeat until (reduced) echelon form

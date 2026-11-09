@@ -17,15 +17,21 @@ def eval_count(func):
     return inner
 
 
+# Usage: CONDITIONS[condition](b)(a). Set up this way for easy use with filter().
 CONDITIONS = {"eq": lambda b: lambda a: a == b.value, "neq": lambda b: lambda a: a != b.value}
-CONDITIONS = {label: eval_count(func) for label, func in CONDITIONS.items()}
 
 
+# Quick function to transpose 2D nested lists
 def transpose(data: list[list]) -> list[list]:
     return list(zip(*data))
 
 
 def construct_arcs(s: Sudoku) -> set[tuple]:
+    """
+    Generates arcs for a sukoku board. Returns as a set.
+    Each entry is a tuple: (field, condition, field | int).
+    """
+
     arcs = {(a, "neq", b) for row in s.board for a, b in combinations(row, 2)}  # Rows
     arcs |= {(a, "neq", b) for col in transpose(s.board) for a, b in combinations(col, 2)}  # Cols
 
@@ -43,6 +49,7 @@ def construct_arcs(s: Sudoku) -> set[tuple]:
         if field.value != 0
     }
 
+    # Quality check to catch faulty arcs quickly
     for a, cond, b in arcs:
         assert isinstance(a, Field), (
             f"Misformed arc: a is of type {type(a)}, a={a}, domain={getattr(a, 'domain', None)}"
@@ -55,9 +62,6 @@ def construct_arcs(s: Sudoku) -> set[tuple]:
         )
 
     return arcs
-
-
-import random
 
 
 def pick_field(board: list[list[Field]]) -> tuple[Field, int, int]:
@@ -78,6 +82,7 @@ def ac3_constrain(sudoku) -> bool:
     Implementation of the AC-3 algorithm
     @return: true if the constraints can be satisfied, false otherwise
     """
+
     arcs = construct_arcs(sudoku)
     agenda = set(arcs)
 
@@ -87,18 +92,22 @@ def ac3_constrain(sudoku) -> bool:
         # Dummy fields around ints so we only need 1 processing func
         b_parsed = Field(b) if isinstance(b, int) else b
 
-        a_conditioned = list(filter(CONDITIONS[cond](b_parsed), a.domain))
+        # Condition, (effectively) curried on B and wrapped with eval incrementer
+        arc_condition = eval_count(CONDITIONS[cond](b_parsed))
+
+        a_conditioned = set(filter(arc_condition, a.domain))
 
         # No valid values for a (empty domain ergo no solution)
         if not a_conditioned:
             return False
 
-        if diff := [val for val in a.domain if val not in a_conditioned]:
+        if diff := set(a.domain) - a_conditioned:
             for val in diff:
                 a.remove_from_domain(val)
 
             agenda |= {(left, cond, right) for (left, cond, right) in arcs if a is right}
 
+    # Able to satisfy all constraints.
     return True
 
 
@@ -106,8 +115,6 @@ def backtrack(sudoku) -> Sudoku | None:
     """
     Returns a valid final solution if it exists within the outcome space. Returns None otherwise.
     """
-
-    sudoku = deepcopy(sudoku)
 
     if sudoku.filled():
         # Already completely filled in
@@ -118,6 +125,8 @@ def backtrack(sudoku) -> Sudoku | None:
     for value in sorted(field.domain, key=pick_value, reverse=False):
         attempt = deepcopy(sudoku)
 
+        # We have to edit exact same instance instead of replacing,
+        # since arcs refer to this fields object id/specific instance.
         attempt_field = attempt.board[row_idx][col_idx]
 
         attempt_field.value = value
@@ -126,7 +135,8 @@ def backtrack(sudoku) -> Sudoku | None:
         if not ac3_constrain(attempt):
             continue
 
-        # If assigning this value to this field leads to a valid solution, break and return
+        # If assigning this value to this field leads to a valid solution:
+        #   Fill try filling next field, eventually return final solution if reached
         if result := backtrack(attempt):
             return result
 
@@ -135,17 +145,17 @@ def backtrack(sudoku) -> Sudoku | None:
 
 
 class Game:
-    def __init__(self, sudoku):
+    def __init__(self, sudoku: Sudoku):
         self.sudoku = sudoku
 
         # Set neighbours
         for row_group in (sudoku.board[0:3], sudoku.board[3:6], sudoku.board[6:9]):
-            for group in (
+            for region in (
                 transpose(row_group)[0:3],
                 transpose(row_group)[3:6],
                 transpose(row_group)[6:9],
             ):
-                flattened = [field for col in group for field in col]
+                flattened = [field for col in region for field in col]
                 for i in range(9):
                     flattened[i].set_neighbours(flattened[:i] + flattened[i + 1 :])
 
@@ -156,6 +166,10 @@ class Game:
         global n_evals
 
         n_evals = 0
+
+        if self.sudoku.filled():
+            print("Passed an already completed sudoku, skipping AC-3")
+            return self.valid_solution()
 
         if not ac3_constrain(self.sudoku):
             print(
@@ -178,6 +192,7 @@ class Game:
 
         print(f"Space search led to solution ({n_evals:,} evalutations)")
         self.sudoku = solution
+
         return True
 
     def valid_solution(self) -> bool:
@@ -191,18 +206,21 @@ class Game:
         if not self.sudoku.filled():
             return False
 
-        for row_idx, row in enumerate(self.sudoku.board):
-            for a, b in combinations(range(len(row)), 2):
+        # Same val twice in row?
+        for row in self.sudoku.board:
+            for a, b in combinations(range(9), 2):
                 if row[a].value == row[b].value:
                     return False
 
-        for col_idx, col in enumerate(transpose(self.sudoku.board)):
-            for a, b in combinations(range(len(col)), 2):
+        # Same val twice in col?
+        for col in transpose(self.sudoku.board):
+            for a, b in combinations(range(9), 2):
                 if col[a].value == col[b].value:
                     return False
 
-        for row_idx, row in enumerate(self.sudoku.board):
-            for col_idx, a in enumerate(row):
+        # Same val twice in 3x3?
+        for row in self.sudoku.board[::3]:
+            for a in row[::3]:
                 for b in a.get_neighbours():
                     if a.value == b.value:
                         return False
