@@ -59,7 +59,6 @@ class Sudoku:
     # TODO: for each field, add its neighbors
 
     def board_to_string(self):
-
         output = ""
         for row in range(len(self.board)):
             for col in range(len(self.board[row])):
@@ -70,14 +69,10 @@ class Sudoku:
     def get_board(self):
         return self.board
 
-    def filled(self, print_reason=False) -> bool:
-        for row_idx, row in enumerate(self.board):
-            for col_idx, field in enumerate(row):
-                if field.value != 0:
-                    continue
+    def filled(self) -> bool:
+        for row in self.board:
+            for field in row:
+                if field.value == 0:
+                    return False
 
-                if print_reason:
-                    print(f"({row_idx}, {col_idx}) not filled in")
-
-                return False
         return True

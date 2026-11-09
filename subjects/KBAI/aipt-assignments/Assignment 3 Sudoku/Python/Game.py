@@ -4,7 +4,21 @@ from itertools import combinations
 from Field import Field
 from Sudoku import Sudoku
 
+n_evals = 0
+
+
+def eval_count(func):
+    def inner(*args):
+        global n_evals
+
+        n_evals += 1
+        return func(*args)
+
+    return inner
+
+
 CONDITIONS = {"eq": lambda b: lambda a: a == b.value, "neq": lambda b: lambda a: a != b.value}
+CONDITIONS = {label: eval_count(func) for label, func in CONDITIONS.items()}
 
 
 def transpose(data: list[list]) -> list[list]:
@@ -59,7 +73,7 @@ def pick_value(field: Field) -> int:
     return 1
 
 
-def ac3_constrain(sudoku, print_reason=False) -> bool:
+def ac3_constrain(sudoku) -> bool:
     """
     Implementation of the AC-3 algorithm
     @return: true if the constraints can be satisfied, false otherwise
@@ -77,8 +91,6 @@ def ac3_constrain(sudoku, print_reason=False) -> bool:
 
         # No valid values for a (empty domain ergo no solution)
         if not a_conditioned:
-            if print_reason:
-                print(f"Empty domain, {repr(a)} -({cond} {b})-> {a_conditioned}")
             return False
 
         if diff := [val for val in a.domain if val not in a_conditioned]:
@@ -87,13 +99,10 @@ def ac3_constrain(sudoku, print_reason=False) -> bool:
 
             agenda |= {(left, cond, right) for (left, cond, right) in arcs if a is right}
 
-    if print_reason:
-        print("Arc consistent")
-
     return True
 
 
-def backtrack(sudoku, print_reason=False) -> Sudoku | None:
+def backtrack(sudoku) -> Sudoku | None:
     """
     Returns a valid final solution if it exists within the outcome space. Returns None otherwise.
     """
@@ -144,70 +153,58 @@ class Game:
         print(self.sudoku)
 
     def solve(self) -> bool:
-        if not ac3_constrain(self.sudoku, print_reason=True):
-            print("AC-3 couldn't find consistent solution, no solutions possible")
+        global n_evals
+
+        n_evals = 0
+
+        if not ac3_constrain(self.sudoku):
+            print(
+                f"AC-3 couldn't find consistent solution, no solutions possible ({n_evals:,} evalutations)"
+            )
             return False
 
         if self.sudoku.filled():
-            print("AC-3 led to final solution, no space search needed")
+            print(f"AC-3 led to final solution, no space search needed ({n_evals:,} evalutations)")
             return True
 
         print(self.sudoku)
 
-        print("Starting space search")
-        solution = backtrack(self.sudoku, print_reason=True)
+        print(f"Starting space search")
+        solution = backtrack(self.sudoku)
 
         if not solution:
-            print("Space search couldn't find solution")
+            print(f"Space search couldn't find solution ({n_evals:,} evalutations)")
             return False
 
-        print("Space search led to solution")
+        print(f"Space search led to solution ({n_evals:,} evalutations)")
         self.sudoku = solution
         return True
 
-    def valid_solution(self, print_reason=False) -> bool:
+    def valid_solution(self) -> bool:
         """
         Checks the validity of a sudoku solution
         @return: true if the sudoku solution is correct
         """
 
-        if print_reason:
-            print(self.sudoku)
+        print(self.sudoku)
 
-        if not self.sudoku.filled(print_reason):
+        if not self.sudoku.filled():
             return False
 
         for row_idx, row in enumerate(self.sudoku.board):
             for a, b in combinations(range(len(row)), 2):
-                if row[a].value != row[b].value:
-                    continue
-
-                if print_reason:
-                    print(f"Row {row_idx + 1}: fields {a} and {b} share value {row[a].value}")
-
-                return False
+                if row[a].value == row[b].value:
+                    return False
 
         for col_idx, col in enumerate(transpose(self.sudoku.board)):
             for a, b in combinations(range(len(col)), 2):
-                if col[a].value != col[b].value:
-                    continue
-
-                if print_reason:
-                    print(f"Col {col_idx + 1}: fields {a} and {b} share value {col[a].value}")
-
-                return False
+                if col[a].value == col[b].value:
+                    return False
 
         for row_idx, row in enumerate(self.sudoku.board):
             for col_idx, a in enumerate(row):
                 for b in a.get_neighbours():
-                    if a.value != b.value:
-                        continue
-
-                    if print_reason:
-                        print(
-                            f"Value at ({row_idx + 1}, {col_idx + 1}) shares value {a.value} with other cell in 3x3 region"
-                        )
-
-                    return False
+                    if a.value == b.value:
+                        return False
 
         return True
