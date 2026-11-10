@@ -1,4 +1,5 @@
 from copy import deepcopy
+from functools import partial
 from itertools import combinations
 
 from Field import Field
@@ -17,6 +18,11 @@ def eval_count(func):
     return inner
 
 
+def get_eval_count() -> int:
+    global n_evals
+    return n_evals
+
+
 # Usage: CONDITIONS[condition](b)(a). Set up this way for easy use with filter().
 CONDITIONS = {"eq": lambda b: lambda a: a == b.value, "neq": lambda b: lambda a: a != b.value}
 
@@ -32,14 +38,7 @@ def construct_arcs(s: Sudoku) -> set[tuple]:
     Each entry is a tuple: (field, condition, field | int).
     """
 
-    arcs = {(a, "neq", b) for row in s.board for a, b in combinations(row, 2)}  # Rows
-    arcs |= {(a, "neq", b) for col in transpose(s.board) for a, b in combinations(col, 2)}  # Cols
-
-    # Mirror versions
-    arcs |= {(b, cond, a) for (a, cond, b) in arcs}
-
-    # 3x3's (No need to mirror since we're looping over every field)
-    arcs |= {(a, "neq", b) for row in s.board for a in row for b in a.get_neighbours()}
+    arcs = {(a, "neq", b) for row in s.board for a in row for b in a.get_neighbours()}
 
     arcs |= {
         # Already given (no need to mirror)
@@ -64,20 +63,77 @@ def construct_arcs(s: Sudoku) -> set[tuple]:
     return arcs
 
 
-def pick_field(board: list[list[Field]]) -> tuple[Field, int, int]:
-    for r, row in enumerate(board):
-        for c, field in enumerate(row):
-            if field.value == 0:
-                return field, r, c
-
-    # return random.choice(filtered)
+def degree(field: Field) -> int:
+    return -sum(1 for x in field.get_neighbours() if not x.is_finalized())
 
 
-def pick_value(field: Field) -> int:
-    return 1
+def pick_arc(agenda: set[tuple], **heuristics) -> tuple:
+    """
+    Returns the next arc according to heuristics. Removes arc from the agenda.
+    Without heuristics an arbitrary arc is taken
+    """
+
+    if all(not enabled for enabled in heuristics.values()):
+        return agenda.pop()
+
+    def score_arc(arc: tuple, **heuristics) -> tuple:
+        """
+        Scores an arc based on the active heuristics. Lower scores means higher priority/ picked earlier.
+        """
+        a, _, b = arc
+        score = []
+
+        # Finalized score heuristic, 0 if b is finalized, 1 otherwise
+        if heuristics.get("finalized", False):
+            b_parsed = Field(b) if isinstance(b, int) else b
+            score.append(not b_parsed.is_finalized())
+
+        # Minimum remaining values heuristic, number of values left in domain
+        if heuristics.get("mrv", False):
+            score.append(len(a.domain))
+
+        # Degree, number of open fields a is connected to
+        if heuristics.get("degree", False):
+            score.append(degree(a))
+
+        return score
+
+    arc = min(agenda, key=lambda arc: score_arc(arc, **heuristics))
+    agenda.remove(arc)
+
+    return arc
 
 
-def ac3_constrain(sudoku) -> bool:
+def pick_field(board: list[list[Field]], **heuristics) -> tuple[Field, int, int]:
+    candidates = [
+        (board[r][c], r, c) for r in range(9) for c in range(9) if not board[r][c].is_finalized()
+    ]
+
+    if heuristics.get("mrv", False):
+        smallest_domain_size = min(len(f.domain) for f, _, _ in candidates)
+        candidates = [c for c in candidates if len(c[0].domain) == smallest_domain_size]
+
+    # Degree, number of open fields a is connected to
+    if heuristics.get("degree", False):
+        smallest_degree = min(degree(f) for f, _, _ in candidates)
+        candidates = [c for c in candidates if degree(c[0]) == smallest_degree]
+
+    return candidates[0]
+
+
+def score_value(value: int, field: Field, **heuristics) -> list:
+    score = []
+
+    # Least Constraining Value: Number of unassigned peers that currently have `value` in their domain
+    if heuristics.get("lcv", False):
+        score.append(
+            sum(1 for n in field.get_neighbours() if not n.is_finalized() and value in n.domain)
+        )
+
+    return score
+
+
+def ac3_constrain(sudoku, **heuristics) -> bool:
     """
     Implementation of the AC-3 algorithm
     @return: true if the constraints can be satisfied, false otherwise
@@ -87,7 +143,7 @@ def ac3_constrain(sudoku) -> bool:
     agenda = set(arcs)
 
     while agenda:
-        a, cond, b = agenda.pop()
+        a, cond, b = pick_arc(agenda, **heuristics)
 
         # Dummy fields around ints so we only need 1 processing func
         b_parsed = Field(b) if isinstance(b, int) else b
@@ -111,7 +167,7 @@ def ac3_constrain(sudoku) -> bool:
     return True
 
 
-def backtrack(sudoku) -> Sudoku | None:
+def backtrack(sudoku, **heuristics) -> Sudoku | None:
     """
     Returns a valid final solution if it exists within the outcome space. Returns None otherwise.
     """
@@ -120,9 +176,9 @@ def backtrack(sudoku) -> Sudoku | None:
         # Already completely filled in
         return sudoku
 
-    field, row_idx, col_idx = pick_field(sudoku.board)
+    field, row_idx, col_idx = pick_field(sudoku.board, **heuristics)
 
-    for value in sorted(field.domain, key=pick_value, reverse=False):
+    for value in sorted(field.domain, key=partial(score_value, field=field, **heuristics)):
         attempt = deepcopy(sudoku)
 
         # We have to edit exact same instance instead of replacing,
@@ -132,12 +188,12 @@ def backtrack(sudoku) -> Sudoku | None:
         attempt_field.value = value
         attempt_field.domain = [value]
 
-        if not ac3_constrain(attempt):
+        if not ac3_constrain(attempt, **heuristics):
             continue
 
         # If assigning this value to this field leads to a valid solution:
         #   Fill try filling next field, eventually return final solution if reached
-        if result := backtrack(attempt):
+        if result := backtrack(attempt, **heuristics):
             return result
 
     # No values in domain were valid, ergo invalid solution
@@ -149,6 +205,14 @@ class Game:
         self.sudoku = sudoku
 
         # Set neighbours
+        for row in sudoku.board:
+            for c, field in enumerate(row):
+                field.neighbours.extend(row[:c] + row[c + 1 :])
+
+        for col in transpose(sudoku.board):
+            for r, field in enumerate(col):
+                field.neighbours.extend(col[:r] + col[r + 1 :])
+
         for row_group in (sudoku.board[0:3], sudoku.board[3:6], sudoku.board[6:9]):
             for region in (
                 transpose(row_group)[0:3],
@@ -156,13 +220,18 @@ class Game:
                 transpose(row_group)[6:9],
             ):
                 flattened = [field for col in region for field in col]
-                for i in range(9):
-                    flattened[i].set_neighbours(flattened[:i] + flattened[i + 1 :])
+                for i, field in enumerate(flattened):
+                    field.neighbours.extend(flattened[:i] + flattened[i + 1 :])
+
+        # Deduplicate neighbors
+        for row in sudoku.board:
+            for field in row:
+                field.neighbours = list(set(field.neighbours))
 
     def show_sudoku(self):
         print(self.sudoku)
 
-    def solve(self) -> bool:
+    def solve(self, **heuristics) -> bool:
         global n_evals
 
         n_evals = 0
@@ -171,26 +240,26 @@ class Game:
             print("Passed an already completed sudoku, skipping AC-3")
             return self.valid_solution()
 
-        if not ac3_constrain(self.sudoku):
+        if not ac3_constrain(self.sudoku, **heuristics):
             print(
-                f"AC-3 couldn't find consistent solution, no solutions possible ({n_evals:,} evalutations)"
+                f"AC-3 couldn't find consistent solution, no solutions possible ({n_evals:,} evaluations)"
             )
             return False
 
         if self.sudoku.filled():
-            print(f"AC-3 led to final solution, no space search needed ({n_evals:,} evalutations)")
+            print(f"AC-3 led to final solution, no space search needed ({n_evals:,} evaluations)")
             return True
 
         print(self.sudoku)
 
         print(f"Starting space search")
-        solution = backtrack(self.sudoku)
+        solution = backtrack(self.sudoku, **heuristics)
 
         if not solution:
-            print(f"Space search couldn't find solution ({n_evals:,} evalutations)")
+            print(f"Space search couldn't find solution ({n_evals:,} evaluations)")
             return False
 
-        print(f"Space search led to solution ({n_evals:,} evalutations)")
+        print(f"Space search led to solution ({n_evals:,} evaluations)")
         self.sudoku = solution
 
         return True
@@ -219,10 +288,15 @@ class Game:
                     return False
 
         # Same val twice in 3x3?
-        for row in self.sudoku.board[::3]:
-            for a in row[::3]:
-                for b in a.get_neighbours():
-                    if a.value == b.value:
-                        return False
+        for region_row in range(0, 9, 3):
+            for region_col in range(0, 9, 3):
+                vals = [
+                    self.sudoku.board[r][c].value
+                    for r in range(region_row, region_row + 3)
+                    for c in range(region_col, region_col + 3)
+                ]
+
+                if len(set(vals)) != 9:
+                    return False
 
         return True

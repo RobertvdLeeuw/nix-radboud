@@ -84,7 +84,6 @@
         packages = [
           venv
           pkgs.uv
-          # pkgs.python311Packages.numba
         ];
 
         env = {
