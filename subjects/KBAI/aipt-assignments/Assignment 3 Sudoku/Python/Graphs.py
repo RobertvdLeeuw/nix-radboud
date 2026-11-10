@@ -1,24 +1,13 @@
 from copy import deepcopy
 from glob import glob
-from itertools import combinations
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from Game import Game, get_eval_count
+from Game import EvalLimit, Game, get_eval_count
 from Sudoku import Sudoku
 
 HEURISTICS = ("mrv", "finalized", "degree", "lcv")
 sudokus = [(path, Sudoku(path)) for path in glob("./Sudokus/*.txt", recursive=False)]
-
-
-def powerset(input_set: list, n: int | None = None) -> set:
-    if n is None:
-        n = len(input_set)
-
-    if n == 0:
-        return [[]]
-
-    return list(combinations(input_set, n)) + powerset(input_set, n - 1)
 
 
 def get_sudoku_type(filepath: str) -> str:
@@ -29,13 +18,31 @@ def get_sudoku_type(filepath: str) -> str:
 
 
 n_evals = []
-for path, s in sudokus:
-    for heuristics in powerset(HEURISTICS):
+for path, s in reversed(sudokus):
+    for heuristics in (
+        [],
+        *[HEURISTICS[:i] + HEURISTICS[i + 1 :] for i in range(len(HEURISTICS))],
+        HEURISTICS,
+    ):
         name = path.split("/")[-1].replace(".txt", "")
-        heuristics_formatted = "+".join(heuristics) or "none"
+
+        if len(heuristics) == len(HEURISTICS):
+            heuristics_formatted = "all"
+        elif len(heuristics) == 0:
+            heuristics_formatted = "none"
+        else:
+            missing = [h for h in HEURISTICS if h not in heuristics][0]
+            heuristics_formatted = "all but " + missing
 
         print(f"---------- {name} ({heuristics_formatted}) start ----------")
-        g = Game(deepcopy(s)).solve(**{h: True for h in heuristics})
+
+        try:
+            g = Game(deepcopy(s)).solve(**{h: True for h in heuristics})
+        except EvalLimit:
+            pass
+        except:
+            raise
+
         print(f"---------- {name} ({heuristics_formatted}) end ------------")
 
         n_evals.append((name, heuristics_formatted, get_eval_count()))
@@ -57,6 +64,6 @@ ax.set(xlabel="Sudoku", ylabel="Evaluation count", yscale="log")
 ax.legend(title="Heuristics")
 plt.xticks(rotation=45, ha="right")
 plt.tight_layout()
-plt.savefig("./graphs/bar.png")
+plt.savefig("./graphs/bar-eval-missing-1.png")
 
 print(df)

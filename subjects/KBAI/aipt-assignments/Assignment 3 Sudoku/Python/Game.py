@@ -8,11 +8,19 @@ from Sudoku import Sudoku
 n_evals = 0
 
 
+class EvalLimit(Exception):
+    pass
+
+
 def eval_count(func):
     def inner(*args):
         global n_evals
 
         n_evals += 1
+
+        if n_evals >= 250_000:
+            raise EvalLimit
+
         return func(*args)
 
     return inner
@@ -32,17 +40,18 @@ def transpose(data: list[list]) -> list[list]:
     return list(zip(*data))
 
 
-def construct_arcs(s: Sudoku) -> set[tuple]:
+def construct_arcs(s: Sudoku) -> dict:
     """
-    Generates arcs for a sukoku board. Returns as a set.
+    Generates arcs for a sukoku board.
+    Returns as a dict with only keys for a quick ordered set.
     Each entry is a tuple: (field, condition, field | int).
     """
 
-    arcs = {(a, "neq", b) for row in s.board for a in row for b in a.get_neighbours()}
+    arcs = {(a, "neq", b): None for row in s.board for a in row for b in a.get_neighbours()}
 
     arcs |= {
         # Already given (no need to mirror)
-        (field, "eq", field.value)
+        (field, "eq", field.value): None
         for row in s.board
         for field in row
         if field.value != 0
@@ -64,19 +73,23 @@ def construct_arcs(s: Sudoku) -> set[tuple]:
 
 
 def degree(field: Field) -> int:
+    # Negative , so fields with more open n eig hbou rs get a lower score
     return -sum(1 for x in field.get_neighbours() if not x.is_finalized())
 
 
-def pick_arc(agenda: set[tuple], **heuristics) -> tuple:
+def pick_arc(agenda: dict, **heuristics) -> tuple:
     """
     Returns the next arc according to heuristics. Removes arc from the agenda.
     Without heuristics an arbitrary arc is taken
     """
 
     if all(not enabled for enabled in heuristics.values()):
-        return agenda.pop()
+        arc = next(iter(agenda))
+        del agenda[arc]
 
-    def score_arc(arc: tuple, **heuristics) -> tuple:
+        return arc
+
+    def score_arc(arc: tuple, **heuristics) -> list:
         """
         Scores an arc based on the active heuristics. Lower scores means higher priority/ picked earlier.
         """
@@ -99,7 +112,7 @@ def pick_arc(agenda: set[tuple], **heuristics) -> tuple:
         return score
 
     arc = min(agenda, key=lambda arc: score_arc(arc, **heuristics))
-    agenda.remove(arc)
+    del agenda[arc]
 
     return arc
 
@@ -140,9 +153,10 @@ def ac3_constrain(sudoku, **heuristics) -> bool:
     """
 
     arcs = construct_arcs(sudoku)
-    agenda = set(arcs)
+    agenda = dict(arcs)
 
     while agenda:
+        print(f"Iterations: {n_evals:,}", end="\r")
         a, cond, b = pick_arc(agenda, **heuristics)
 
         # Dummy fields around ints so we only need 1 processing func
@@ -161,7 +175,7 @@ def ac3_constrain(sudoku, **heuristics) -> bool:
             for val in diff:
                 a.remove_from_domain(val)
 
-            agenda |= {(left, cond, right) for (left, cond, right) in arcs if a is right}
+            agenda |= {(left, cond, right): None for (left, cond, right) in arcs if right is a}
 
     # Able to satisfy all constraints.
     return True
@@ -206,12 +220,12 @@ class Game:
 
         # Set neighbours
         for row in sudoku.board:
-            for c, field in enumerate(row):
-                field.neighbours.extend(row[:c] + row[c + 1 :])
+            for field in row:
+                field.neighbours.extend(row)
 
         for col in transpose(sudoku.board):
-            for r, field in enumerate(col):
-                field.neighbours.extend(col[:r] + col[r + 1 :])
+            for field in col:
+                field.neighbours.extend(col)
 
         for row_group in (sudoku.board[0:3], sudoku.board[3:6], sudoku.board[6:9]):
             for region in (
@@ -220,13 +234,13 @@ class Game:
                 transpose(row_group)[6:9],
             ):
                 flattened = [field for col in region for field in col]
-                for i, field in enumerate(flattened):
-                    field.neighbours.extend(flattened[:i] + flattened[i + 1 :])
+                for field in flattened:
+                    field.neighbours.extend(flattened)
 
         # Deduplicate neighbors
         for row in sudoku.board:
             for field in row:
-                field.neighbours = list(set(field.neighbours))
+                field.neighbours = list(set(field.neighbours) - {field})
 
     def show_sudoku(self):
         print(self.sudoku)
