@@ -19,7 +19,7 @@ class App:
     @staticmethod
     def start():
         while True:
-            type_input = input("Complete or incomplete sudoku's: ")
+            type_input = input("[C]omplete or [i]ncomplete sudoku's: ")
 
             if type_input.lower().startswith("c"):
                 sudoku_subfolder = "complete"
@@ -29,7 +29,7 @@ class App:
                 print("Invalid selection, excepted [c]omplete or [i]ncomplete")
                 continue
 
-            type_input = input("Valid or invalid sudoku's: ")
+            type_input = input("[V]alid or [i]nvalid sudoku's: ")
 
             if type_input.lower().startswith("v"):
                 sudoku_subfolder += "/."
