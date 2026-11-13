@@ -2,9 +2,10 @@ Supervised feature extraction (binary labels)
 Extracts oscillatory features from multi-channel recording
 
 Does linear decomp into subspace components, represented by spatial filters
-	A spacial filter $w^TX$ enhances or suppresses contribution from certain channels
-	
+A spacial filter $w^TX$ enhances or suppresses contribution from certain channels
+
 Goal of CSP is to find 2 spacial unmixing filters for contrast enhancement between conditions, where:
+
 - Each filter delivers one virtual (CSP) channel
 - Each filter maximizes bandpower (approx. narrowband variance) for one class, but minimizes for the other
 
@@ -27,6 +28,7 @@ Optimization formulation (Rayleigh quotient):
 $$argmax_W \frac{W^T (\Sigma_1 - \Sigma_2) W}{W^T (\Sigma_1 + \Sigma_2) W} \text{ or } argmax_W \frac{W^T \Sigma_1 W}{W^T \Sigma_2 W}$$
 
 Find spatial intuitions for this
-- Whiten wrt $\Sigma_1 + \Sigma_2$ 
-- rotation of eigvecs from new CSP axes
-![[Pasted image 20261110203649.png]]
+
+- Whiten wrt $\Sigma_1 + \Sigma_2$
+- rotation of eigvecs form new CSP axes
+  ![[Pasted image 20261110203649.png]]

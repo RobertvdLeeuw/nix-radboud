@@ -28,7 +28,7 @@ Adaboost (adaptive boosting) UPDATE THESE
 - Repeat n times
 
 
-Gradient boosting (fits trees on pseudo-residuals
+Gradient boosting (fits trees on pseudo-residuals)
 $$F_t(x) = (\sum_{i=2}^{t} \alpha h_i(x)) + C$$
 - Start with easy initial prediction (for instance, mean of data)
 - Compute pseudo-residuals of all samples $-\frac{\partial}{\partial F(x_i)} L(y_i, F(x_i))$ or $y_1 - F(x_1)$
