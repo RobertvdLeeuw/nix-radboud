@@ -45,7 +45,7 @@ $\mathbb{E}[X] = \frac{1}{b-a} \int_a^b u du = \frac{1}{2}(a+b)$
 $Var[X] = \frac{(b-a)^2}{12}$
 
 ## Hypergeometric: $X \sim HypGeom(n, s, m), \space m \le n, \space s \le n$
-$n$ total items of which $s$ blue. Pick $m$ items at random, get $X$ blue
+$n$ total items of which $s$ blue. Pick $m$ items at random, prob of getting $k$ blue
 $P_X(k) = \frac{{s \choose k}{n-s \choose m-k}}{n \choose m}$
 $S_X = \{k \in N \space | \space max(0, m + s − n) \le k \le min(s, m)\}$
 

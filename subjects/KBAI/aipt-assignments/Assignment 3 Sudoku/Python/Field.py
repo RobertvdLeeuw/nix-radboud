@@ -16,7 +16,7 @@ class Field:
         # Constructor in case the field is known, i.e., it contains a value
         if len(args) == 1:
             self.value = args[0]
-            self.domain = []
+            self.domain = [self.value]
 
     # endregion
 
@@ -34,7 +34,7 @@ class Field:
 
     def set_value(self, value):
         self.value = value
-        self.domain = []  # Added for consistency
+        # self.domain = []  # Added for consistency
 
     # endregion
 
@@ -72,6 +72,9 @@ class Field:
         :param value: value to remove
         :return: true if the value was removed
         """
+        assert len(self.domain) > 0, "Attempting to remove from empty domain"
+        assert value in self.domain, f"Attemping to remove value that isn't in domain ({value})"
+
         value_removed = self.domain.remove(value)
         if len(self.domain) == 1:
             self.set_value(self.domain[0])
@@ -87,5 +90,8 @@ class Field:
         :return:
         """
         return "." if self.value == 0 else str(self.value)
+
+    def __repr__(self):
+        return f"Field(domain={self.domain})" if self.domain else f"Field(val={self.value})"
 
     # endregion
