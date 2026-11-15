@@ -29,5 +29,13 @@ $$H = c_1H_1 + ... + c_{n-k}H_{n-k}$$
 	4. That's $H_i$
 3. That's $H$
 
-$$S=P+H \text{ , where }P = \text{a particular solution for the nonhomo}$$
+$$S=P+H \text{ , where }P = \text{a particular solution for the nonhomo (solution for pivot-only columns)}$$
 
+
+
+Vectors independent iff $\forall a_i = 0$ is only solution to $\sum a_i v_i = 0$ 
+	So finding dependence = finding non-zero solution, $\text{dependent}(V) \Leftrightarrow \neg \exists_{v \in V}$ that can be expressed by other components in V  
+
+Basis requirements: independent, and spanning (every vec in V can be expressed using these axes)
+
+Linear maps ($f(x) = cx$) preserves addition, multiplication, 0, and sign
