@@ -34,7 +34,7 @@ $F(S) = \{a | a \in S \text{ if } acc(a, S)\} \text{ ie. returns each argument i
 Extension $E \subseteq A$ (types of positions):
 
 - **Naive** if conflict-free and maximal (no conflict-free superset exists)
-- **Stable** if conflict-free and every other arogument in $A$ is attacked by $E$
+- **Stable** if conflict-free and every other argument in $A$ is attacked by $E$
 - **Complete** if admissible and $E = F(E)$
 - **Grounded** if complete and minimal (no complete subset exists)
   - Claim: there is always a unique grounded extension, and for finite $AF$ it can be found by iteratively applying $F$ to $\emptyset$
@@ -79,4 +79,3 @@ $$\mathcal{L}(a)=in \iff \forall(\mathcal{L}(b) = out \space | \space (b, a) \in
 $$\mathcal{L}(a)=out \iff \exists(\mathcal{L}(b) = in \space | \space (b, a) \in R) \text{ ie. an in-argument attacks a}$$
 $$\mathcal{L}_{in} \cup \mathcal{L}_{out} = \emptyset, \space \mathcal{L}_{in} \cap \mathcal{L}_{out} = A$$
 Preferred if $\mathcal{L}_{in}$ is maximal among all labelings, ie. $$\mathcal{L}_{in} \in pref(S)$$
-1

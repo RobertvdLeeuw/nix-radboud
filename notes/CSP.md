@@ -25,7 +25,7 @@ ERD/ERS curve represents change in signals envelope power over time, relative to
 CSP is sensitive to outliers (due to being based on variance)
 
 Optimization formulation (Rayleigh quotient):
-$$argmax_W \frac{W^T (\Sigma_1 - \Sigma_2) W}{W^T (\Sigma_1 + \Sigma_2) W} \text{ or } argmax_W \frac{W^T \Sigma_1 W}{W^T \Sigma_2 W}$$
+$$argmax_W \space \frac{W^T (\Sigma_1 - \Sigma_2) W}{W^T (\Sigma_1 + \Sigma_2) W} \text{ or } argmax_W \space \frac{W^T \Sigma_1 W}{W^T \Sigma_2 W}$$
 
 Find spatial intuitions for this
 
