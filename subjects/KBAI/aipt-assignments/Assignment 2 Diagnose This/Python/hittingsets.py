@@ -1,9 +1,55 @@
 import operator
-from functools import reduce
+from functools import partial, reduce
 from itertools import combinations
+from typing import Self
 
 
-def run_hitting_set_algorithm(conflict_sets, all_means_all: bool = True):
+class Node:
+    def __init__(self, hs: set, parent: Self | None = None):
+        self.hs: set = hs
+        self.conflict: frozenset = None
+
+        self.parent = parent
+        self.children = dict()
+
+    def get_leaves(self) -> list:
+        if self.conflict == "terminal":
+            return [self]
+        if not self.children:
+            return []
+
+        return [leaf for c in self.children.values() for leaf in c.get_leaves()]
+
+    @property
+    def is_root(self) -> bool:
+        return self.parent is None
+
+    def checked_sets(self) -> set[frozenset]:
+        addition = {self.conflict} if self.conflict and self.conflict != "terminal" else set()
+
+        if self.is_root:
+            return addition
+
+        return addition | self.parent.checked_sets()
+
+    @property
+    def root(self) -> Self:
+        return self if self.is_root else self.parent.root
+
+    @property
+    def n(self) -> int:
+        return 1 if self.is_leaf else sum(c.n for c in self.children)
+
+    @property
+    def abs_depth(self) -> int:
+        return 0 if self.is_root else self.parent.abs_depth + 1
+
+
+def pick_conflict(conflict_sets: set[frozenset]) -> frozenset:
+    return list(conflict_sets)[0]
+
+
+def run_hitting_set_algorithm(conflict_sets):
     """
     Algorithm that handles the entire process from conflict sets to hitting sets
 
@@ -11,40 +57,41 @@ def run_hitting_set_algorithm(conflict_sets, all_means_all: bool = True):
     :return: the hitting sets and minimal hitting sets as list of lists
     """
 
-    # MRV
-    conflict_sets = sorted(conflict_sets, key=len)
+    conflict_sets = {frozenset(conflict) for conflict in conflict_sets}
 
-    def berge(min_hits: set[frozenset], c_set: frozenset) -> set[frozenset]:
-        print("Going in:", [list(hs) for hs in min_hits], ", conflict:", list(c_set))
-        min_hits = [
-            [hs] if hs.intersection(c_set) else [frozenset([*hs, e]) for e in c_set]
-            for hs in min_hits
-        ]
+    def process(node: Node):
+        for item in sorted(node.conflict):
+            child = Node(node.hs | {item}, node)
+            node.children[item] = child
+            stack.append(child)
 
-        print("Updated:", [list(hit) for hits in min_hits for hit in hits])
+    root = Node(set())
+    stack = [root]
 
-        min_hits = [hit for hits in min_hits for hit in hits]
+    while stack:
+        node = stack.pop()  # TODO: stack or queue?
 
-        print("Flattened:", [list(hs) for hs in min_hits])
-
-        # Remove supersets
-        min_hits = list(
-            filter(lambda hs: not any(hs.issuperset(s) and hs != s for s in min_hits), min_hits)
+        unhit = list(
+            filter(lambda cs: not node.hs.intersection(cs), conflict_sets - node.checked_sets())
         )
-        print("Pruned supers:", [list(hs) for hs in min_hits], "\n\n")
 
-        return min_hits
+        if not unhit:
+            node.conflict = "terminal"
+            continue
 
-    hitting_sets = reduce(berge, {frozenset(s) for s in conflict_sets}, {frozenset()})
-    hitting_sets = [list(hs) for hs in hitting_sets]
+        node.conflict = pick_conflict(unhit)
 
-    min_k = min(map(len, hitting_sets))
-    min_hitting_sets = [hs for hs in hitting_sets if len(hs) == min_k]
+        process(node)
+
+    hitting_sets = [list(l.hs) for l in root.get_leaves()]
+    from pprint import pprint
+
+    pprint(hitting_sets)
 
     return hitting_sets, min_hitting_sets
 
 
-a, b = run_hitting_set_algorithm([[1, 2, 3], [3, 4, 5]])
+a, b = run_hitting_set_algorithm([[1, 2, 3], [3, 4, 5], [8, 5]])
 print("END\n")
 print(a)
 print(b)
