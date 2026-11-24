@@ -25,29 +25,31 @@ class Node:
     def is_root(self) -> bool:
         return self.parent is None
 
-    def checked_sets(self) -> set[frozenset]:
-        addition = {self.conflict} if self.conflict and self.conflict != "valid" else set()
+    def parents_sets(self) -> set[frozenset]:
+        addition = (
+            {self.conflict} if self.conflict and self.conflict not in ("valid", "pruned") else set()
+        )
 
         if self.is_root:
             return addition
 
-        return addition | self.parent.checked_sets()
-
-    @property
-    def root(self) -> Self:
-        return self if self.is_root else self.parent.root
-
-    @property
-    def n(self) -> int:
-        return 1 if self.is_leaf else sum(c.n for c in self.children)
-
-    @property
-    def abs_depth(self) -> int:
-        return 0 if self.is_root else self.parent.abs_depth + 1
+        return addition | self.parent.parents_sets()
 
 
 def pick_conflict(conflict_sets: set[frozenset]) -> frozenset:
+
+    # MRV
+    # Degree
+
     return list(conflict_sets)[0]
+
+
+def score_conflict_candidates(node: Node, value: Any) -> tuple:
+    score = []
+
+    # LCV
+
+    return tuple(score)
 
 
 def label(node: Node) -> str:
@@ -68,6 +70,30 @@ def print_tree(node: Node, prefix: str = "", edge=None, last: bool = True):
         print_tree(child, child_prefix, item, i == len(items) - 1)
 
 
+hit_tests, elem_ops = 0, 0
+
+
+def get_evaluations():
+    global hit_tests, elem_ops
+    return hit_tests, elem_ops
+
+
+def unhit_sets(hs: set, conflict_sets) -> list[frozenset]:
+    global hit_tests, elem_ops
+
+    out = []
+    for cs in conflict_sets:
+        # O(nR), n = |conflict_sets|, R = min size of smallest conflict set
+        # https://theory.stanford.edu/~virgi/cs267/lecture5.pdf
+
+        hit_tests += 1
+        elem_ops += min(len(hs), len(cs))
+
+        if hs.isdisjoint(cs):
+            out.append(cs)
+    return out
+
+
 def find_min_hs(hitting_sets: list[set]) -> list[list]:
     minimal = []
 
@@ -78,7 +104,7 @@ def find_min_hs(hitting_sets: list[set]) -> list[list]:
     return [list(hs) for hs in minimal]
 
 
-def run_hitting_set_algorithm(conflict_sets):
+def run_hitting_set_algorithm(conflict_sets, **heuristics):
     """
     Algorithm that handles the entire process from conflict sets to hitting sets
 
@@ -86,41 +112,58 @@ def run_hitting_set_algorithm(conflict_sets):
     :return: the hitting sets and minimal hitting sets as list of lists
     """
 
-    conflict_sets = {frozenset(conflict) for conflict in conflict_sets}
+    global hit_tests, elem_ops
+    hit_tests, elem_ops = 0, 0
 
-    def process(node: Node):
-        for item in sorted(node.conflict):
-            child = Node(node.hs | {item}, node)
-            node.children[item] = child
-            queue.append(child)
+    # Empty conflict set, so no intersection possible.
+    if any(len(cs) == 0 for cs in conflict_sets):
+        return [], []
+
+    conflict_sets = {frozenset(conflict) for conflict in conflict_sets}
 
     root = Node(set())
     queue = deque([root])
+    hitting_sets = []
 
     while queue:
         node = queue.popleft()
 
-        unhit = list(
-            filter(lambda cs: not node.hs.intersection(cs), conflict_sets - node.checked_sets())
-        )
+        if heuristics.get("prune", False) and any(node.hs.issuperset(hs) for hs in hitting_sets):
+            node.conflict = "pruned"
+            continue
+
+        unhit = unhit_sets(node.hs, conflict_sets - node.parents_sets())
 
         if not unhit:
             node.conflict = "valid"
+            hitting_sets.append(node.hs)
             continue
 
         node.conflict = pick_conflict(unhit)
 
-        process(node)
+        for item in sorted(node.conflict, key=partial(score_conflict_candidates, node)):
+            child = Node(node.hs | {item}, node)
+            node.children[item] = child
+            queue.append(child)
 
+    # Seems like a waste to recollect if prune=True, but we need a line to typecast to lists anyway.
     hitting_sets = [list(l.hs) for l in root.get_leaves()]
-    min_hitting_sets = find_min_hs([l.hs for l in root.get_leaves()])
+
+    if heuristics.get("prune", False):
+        min_hitting_sets = hitting_sets
+    else:
+        min_hitting_sets = find_min_hs([l.hs for l in root.get_leaves()])
 
     print_tree(root)
 
     return hitting_sets, min_hitting_sets
 
 
-a, b = run_hitting_set_algorithm([[1, 2, 3], [3, 4, 5], [8, 5]])
-print("END\n")
-print(a)
-print(b)
+a, b = run_hitting_set_algorithm([[1, 2, 3], [3, 4, 5], [8, 5]], prune=True)
+# print("END\n")
+# print(a)
+# print(b)
+print(get_evaluations())
+
+a, b = run_hitting_set_algorithm([[1, 2, 3], [3, 4, 5], [8, 5, 6, 99, 55]], prune=False)
+print(get_evaluations())
